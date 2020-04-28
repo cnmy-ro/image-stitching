@@ -1,0 +1,20 @@
+1. Extract features:
+    - Harris feature detection + feature description [Sensitivity analysis: Different path sizes]
+
+2. Compute distance b/w all features in img1 and all in img2:
+    - Use normalized correlation, euclidean distance (on normalized values)
+
+3. Select best matches using a threshold [Sensitivity analysis: Different threshold values]
+
+4. Apply RANSAC:
+    - Do analysis blah blah
+    - Find the best transformation
+
+5. Warp img2 into im1 using the best (affine) transformation
+
+6. Checking the accuracy:
+    - Measure euc dist b/w featurs of img1 and of *transformed* img2
+    - Sensitivity analysis is based on ths result
+    - Plot
+
+7. Finish the app. Try it out on hard cases and report
