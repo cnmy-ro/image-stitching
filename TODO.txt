@@ -1,3 +1,4 @@
+TASKS:
 1. Extract features:
     - Harris feature detection + feature description [Sensitivity analysis: Different path sizes]
 
@@ -18,3 +19,8 @@
     - Plot
 
 7. Finish the app. Try it out on hard cases and report
+
+###############################################################################
+MISC. TODOs:
+1. Vectorize the FOR loops
+2. Remove ticks from the displayed images

@@ -4,12 +4,15 @@ import cv2
 import skimage.io
 import matplotlib.pyplot as plt
 
-import utils
+import utils, ransac
+
 
 ###############################################################################
 #   CONFIG
 ###############################################################################
-corners = 'harris'
+corner_detector = 'harris'
+
+ransac_params = {'s':3, 'N':10, 'd':0.5, 'T':10}
 
 ###############################################################################
 image_set_dir = "./Images/Pair-1/"
@@ -18,16 +21,16 @@ img2_rgb = skimage.io.imread(image_set_dir+'right.png')
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
-sift = cv2.xfeatures2d.SIFT_create(nfeatures=1000)
+sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
 
-if corners == 'harris':
+if corner_detector == 'harris':
     # Get Harris corners: np array of (row,col) pairs each representing a point
     img1_kpts, img2_kpts = utils.get_Harris_pts(img1_gray, img2_gray)
     # Convert to list of cv2 KeyPoint objects
     img1_kpts = utils.cvt_to_cv2KeyPoints(img1_kpts)
     img2_kpts = utils.cvt_to_cv2KeyPoints(img2_kpts)
 
-if corners == 'sift':
+if corner_detector == 'sift':
     # Get SIFT corners: list of cv2.KeyPoint() objects
     img1_kpts = sift.detect(img1_gray,None)
     img2_kpts = sift.detect(img2_gray,None)
@@ -43,13 +46,21 @@ img2_descriptors = utils.normalize(img2_descriptors)
 
 # Get similarity matrices
 #   - High similarity = Low euc distance, High correlation
+#   - Shape: [n_img1_kpts, n_img2_kpts]
 euc_distance_matrix = utils.compute_euclidean_distances(img1_descriptors, img2_descriptors)
 correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptors)
 
-matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix, similarity_type='euc_distance', threshold=0.3)
-
+# Matching keypoint pair indices.
+matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
+                                                similarity_type='euc_distance',
+                                                threshold=0.3)
 
 # Visualize keypoints and matchings
-utils.display_image_and_keypts(img1_rgb, img2_rgb,
-                               img1_kpts, img2_kpts,
-                               matching_kpt_pair_indices)
+# utils.display_image_and_keypts(img1_gray, img2_gray,
+#                                img1_kpts, img2_kpts,
+#                                matching_kpt_pair_indices)
+
+# Perform RANSAC
+affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
+                                    matching_kpt_pair_indices,
+                                    ransac_params)
