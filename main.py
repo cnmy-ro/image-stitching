@@ -13,12 +13,12 @@ np.random.seed(0)
 ###############################################################################
 corner_detector = 'harris'
 
-ransac_params = {'s':3, 'N':10, 'd':0.8, 'T':10}
+ransac_params = {'s':3, 'N':10, 'd':0.9, 'T':4}
 
 ###############################################################################
-image_set_dir = "./Images/Pair-1/"
-img1_rgb = skimage.io.imread(image_set_dir+'left.png')
-img2_rgb = skimage.io.imread(image_set_dir+'right.png')
+image_set_dir = "./Images/Pair-2/"
+img1_rgb = skimage.io.imread(image_set_dir+'left.jpeg')
+img2_rgb = skimage.io.imread(image_set_dir+'right.jpeg')
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
@@ -58,8 +58,8 @@ matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
 
 # Visualize keypoints and matchings
 # utils.display_image_and_keypts(img1_gray, img2_gray,
-#                                img1_kpts, img2_kpts,
-#                                matching_kpt_pair_indices)
+#                                 img1_kpts, img2_kpts,
+#                                 matching_kpt_pair_indices)
 
 # Perform RANSAC to obtain the affine matrix
 affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
@@ -68,11 +68,14 @@ affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
 # Apply Affine transform
 img2_warped = cv2.warpAffine(img2_gray, affine_matrix[:2,:], (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
 
-stitched_image = np.zeros((img1_gray.shape[0],
-                           img1_gray.shape[1]+img2_gray.shape[1])).astype(np.uint8)
+# fig, [ax1,ax2,ax3] = plt.subplots(3,1)
 
-img2_warped[:, :img1_gray.shape[1]] = img1_gray[:,:]
-stitched_image_temp = np.maximum(stitched_image, [0])
+stitched_image = np.zeros((img1_gray.shape[0], img1_gray.shape[1]+img2_gray.shape[1]))
+stitched_image[:,:img1_gray.shape[1]] = img1_gray[:,:]
 
-plt.imshow(img2_warped, cmap='gray')
-#plt.imshow(img1_gray, cmap='gray')
+# ax1.imshow(stitched_image, cmap='gray')
+# ax2.imshow(img2_warped, cmap='gray')
+
+stitched_image = np.maximum(stitched_image, img2_warped, np.zeros((img1_gray.shape[0], img1_gray.shape[1]+img2_gray.shape[1])))
+
+plt.imshow(stitched_image, cmap='gray')

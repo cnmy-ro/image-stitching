@@ -41,10 +41,12 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
             candidate_model, residuals, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
             candidate_model_list.append(tuple([candidate_model, np.sum(residuals)]))
 
-    if inlier_indices.shape[0] == 0:
-        raise Exception("No satisfactory inliers for given constraints.")
+    # if inlier_indices.shape[0] == 0:
+    #     raise Exception("No satisfactory inliers for given constraints.")
 
     # Choose the best model (one with least residual sum value)
     candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
+    print(candidate_model_list)
     affine_matrix = candidate_model_list[0][0]
+
     return affine_matrix.T
