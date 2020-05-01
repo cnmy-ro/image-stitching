@@ -30,9 +30,9 @@ class Visualizer:
         fig.subplots_adjust(wspace=0.2, hspace=0.1, top=0.95, bottom=0.05, left=0.05, right=0.95)
 
         ax1.imshow(self.img1_gray, cmap='gray')
-        ax1.plot(self.img1_kpts[:, 0], self.img1_kpts[:, 1], color='cyan', marker='o', linestyle='None', markersize=2)
+        ax1.plot(self.img1_kpts[:, 0], self.img1_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=2)
         ax2.imshow(self.img2_gray, cmap='gray')
-        ax2.plot(self.img2_kpts[:, 0], self.img2_kpts[:, 1], color='cyan', marker='o', linestyle='None', markersize=2)
+        ax2.plot(self.img2_kpts[:, 0], self.img2_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=2)
         # Plot matchings
         for m_idxs in self.matching_kpt_pair_indices:
             color = tuple(np.random.random((3,)))
@@ -48,28 +48,42 @@ class Visualizer:
         plt.show()
 
 
-    def stitch_and_display(self, img2_warped):
-        fig, [ax1,ax2,ax3] = plt.subplots(3,1)
-        fig.set_size_inches(0.15*18.5, 0.35*10.5)
-        fig.set_dpi(200)
-        fig.subplots_adjust(wspace=0.2, hspace=0.6, top=0.85, bottom=0.15, left=0.05, right=0.95)
+    def stitch_and_display(self, img2_warped, display_all=False):
+        img1_expanded = np.zeros( (self.img1_rgb.shape[0], self.img1_rgb.shape[1]+self.img2_rgb.shape[1], 3) ).astype(np.uint8)
+        img1_expanded[:, :self.img1_rgb.shape[1], :] = self.img1_rgb[:,:,:]
 
-        stitched_image = np.zeros( (self.img1_rgb.shape[0], self.img1_rgb.shape[1]+self.img2_rgb.shape[1], 3) ).astype(np.uint8)
-        stitched_image[:, :self.img1_rgb.shape[1], :] = self.img1_rgb[:,:,:]
+        stitched_image = img1_expanded.copy()
 
-        ax1.imshow(stitched_image)
-        ax2.imshow(img2_warped)
+        #stitched_image = np.maximum(stitched_image, img2_warped)
 
-        stitched_image = np.maximum(stitched_image, img2_warped)
+        img2_warped_gray = cv2.cvtColor(img2_warped, cv2.COLOR_RGB2GRAY)
+        non_zeros = np.argwhere(img2_warped_gray > 0)
+        stitched_image[non_zeros[:,0], non_zeros[:,1], :] = img2_warped[non_zeros[:,0],non_zeros[:,1],:]
 
-        ax3.imshow(stitched_image)
+        if display_all:
+            fig, [ax1,ax2,ax3] = plt.subplots(3,1)
+            fig.set_size_inches(0.15*18.5, 0.4*10.5)
+            fig.set_dpi(200)
+            #fig.subplots_adjust(hspace=0.3, top=0.85, bottom=0.15)
 
-        ax1.axis('off')
-        ax1.set_title("Left image")
-        ax2.axis('off')
-        ax2.set_title("Right image warped")
-        ax3.axis('off')
-        ax3.set_title("Stitched image")
-        if self.save_figs:
-            fig.savefig("./Results/Stitching_result.png")
-        plt.show()
+            ax1.imshow(img1_expanded)
+            ax2.imshow(img2_warped)
+            ax3.imshow(stitched_image)
+
+            ax1.axis('off')
+            #ax1.set_title("Left image")
+            ax2.axis('off')
+            #ax2.set_title("Right image warped")
+            ax3.axis('off')
+            #ax3.set_title("Stitched image")
+            if self.save_figs:
+                fig.savefig("./Results/Stitching_result.png")
+            plt.show()
+
+        else:
+            fig, ax = plt.subplots()
+            fig.set_size_inches(0.5*18.5, 0.4*10.5)
+            fig.set_dpi(200)
+            ax.imshow(stitched_image)
+            ax.axis('off')
+            plt.show()

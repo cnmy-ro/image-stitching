@@ -3,30 +3,6 @@ import cv2
 import skimage.feature
 import matplotlib.pyplot as plt
 
-def display_images(img1, img2):
-    fig, [ax1, ax2] = plt.subplots(1,2)
-    ax1.imshow(img1)
-    ax2.imshow(img2)
-    plt.show()
-
-def display_image_and_keypts(img1, img2, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-    img1_kpts = np.array([kp.pt for kp in img1_kpts])
-    img2_kpts = np.array([kp.pt for kp in img2_kpts])
-
-    fig, [ax1, ax2] = plt.subplots(1,2)
-    ax1.imshow(img1, cmap='gray')
-    ax1.plot(img1_kpts[:, 0], img1_kpts[:, 1], color='cyan', marker='o', linestyle='None', markersize=2)
-    ax2.imshow(img2, cmap='gray')
-    ax2.plot(img2_kpts[:, 0], img2_kpts[:, 1], color='cyan', marker='o', linestyle='None', markersize=2)
-
-    # Plot matchings
-    for m_idxs in matching_kpt_pair_indices:
-        color = tuple(np.random.random((3,)))
-        ax1.plot(img1_kpts[m_idxs[0], 0], img1_kpts[m_idxs[0], 1], color=color, marker='*', linestyle='None', markersize=5)
-        ax2.plot(img2_kpts[m_idxs[1], 0], img2_kpts[m_idxs[1], 1], color=color, marker='*', linestyle='None', markersize=5)
-
-    plt.show()
-
 ###############################################################################
 # Key point extraction and matching stuff
 ###############################################################################

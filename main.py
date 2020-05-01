@@ -65,7 +65,7 @@ matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
 
 # Visualize keypoints and matchings
 vis.set_matches(matching_kpt_pair_indices)
-#vis.show_keypoints(best_matches=True)
+vis.show_keypoints(best_matches=True)
 
 
 # Perform RANSAC to obtain the affine matrix
