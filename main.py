@@ -4,23 +4,28 @@ import cv2
 import skimage.io
 import matplotlib.pyplot as plt
 
-import utils, ransac
+import utils, ransac, visualizer
 
-np.random.seed(0)
+np.random.seed(100)
 
 ###############################################################################
 #   CONFIG
 ###############################################################################
 corner_detector = 'harris'
 
-ransac_params = {'s':3, 'N':10, 'd':0.9, 'T':4}
+ransac_params = {'s':3, 'N':10, 'd':0.5, 'T':5}
 
 ###############################################################################
-image_set_dir = "./Images/Pair-2/"
-img1_rgb = skimage.io.imread(image_set_dir+'left.jpeg')
-img2_rgb = skimage.io.imread(image_set_dir+'right.jpeg')
+image_set_dir = "./Images/Pair-1/"
+img1_rgb = skimage.io.imread(image_set_dir+'left.png')
+img1_rgb = img1_rgb[:,:,:3]
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
+
+img2_rgb = skimage.io.imread(image_set_dir+'right.png')
+img2_rgb = img2_rgb[:,:,:3]
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
+
+vis = visualizer.Visualizer(img1_rgb, img2_rgb, save_figs=True)
 
 sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
 
@@ -40,6 +45,8 @@ if corner_detector == 'sift':
 img1_kpts, img1_descriptors = sift.compute(img1_gray,img1_kpts)
 img2_kpts, img2_descriptors = sift.compute(img2_gray,img2_kpts)
 
+vis.set_keypoints(img1_kpts, img2_kpts)
+
 # Normalize the descriptors
 img1_descriptors = utils.normalize(img1_descriptors)
 img2_descriptors = utils.normalize(img2_descriptors)
@@ -54,28 +61,18 @@ correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptor
 # Matching keypoint pair indices.
 matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
                                                 similarity_type='euc_distance',
-                                                threshold=0.3)
+                                                threshold=0.2)
 
 # Visualize keypoints and matchings
-# utils.display_image_and_keypts(img1_gray, img2_gray,
-#                                 img1_kpts, img2_kpts,
-#                                 matching_kpt_pair_indices)
+vis.set_matches(matching_kpt_pair_indices)
+#vis.show_keypoints(best_matches=True)
+
 
 # Perform RANSAC to obtain the affine matrix
 affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
                                     matching_kpt_pair_indices,
                                     ransac_params)
 # Apply Affine transform
-img2_warped = cv2.warpAffine(img2_gray, affine_matrix[:2,:], (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
+img2_warped = cv2.warpAffine(img2_rgb, affine_matrix[:2,:], (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
 
-# fig, [ax1,ax2,ax3] = plt.subplots(3,1)
-
-stitched_image = np.zeros((img1_gray.shape[0], img1_gray.shape[1]+img2_gray.shape[1]))
-stitched_image[:,:img1_gray.shape[1]] = img1_gray[:,:]
-
-# ax1.imshow(stitched_image, cmap='gray')
-# ax2.imshow(img2_warped, cmap='gray')
-
-stitched_image = np.maximum(stitched_image, img2_warped, np.zeros((img1_gray.shape[0], img1_gray.shape[1]+img2_gray.shape[1])))
-
-plt.imshow(stitched_image, cmap='gray')
+vis.stitch_and_display(img2_warped)

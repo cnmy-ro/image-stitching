@@ -46,7 +46,6 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
 
     # Choose the best model (one with least residual sum value)
     candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
-    print(candidate_model_list)
     affine_matrix = candidate_model_list[0][0]
 
     return affine_matrix.T
