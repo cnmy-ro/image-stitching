@@ -21,6 +21,17 @@ TASKS:
 7. Finish the app. Try it out on hard cases and report
 
 ###############################################################################
+
+TODOs:
+1. Feature descriptors for Harris points
+2. Correlation as similarity measure
+3. cv.warpPerspective function
+
+MEASUREMENTS:
+1. RANSAC:
+    - Ratio of inliers:outliers for each candidate model
+    - No. of inliers and outliers, avg. residual of the inliers for the best model
+    - Display location of inliers on both images (as a "matching" diagram)
+    - Accuracy score: Euc distance b/w "chosen" (best-matching maybe) keypts of img1 and warped img2
+
 MISC. TODOs:
-1. Vectorize the FOR loops
-2. Remove ticks from the displayed images

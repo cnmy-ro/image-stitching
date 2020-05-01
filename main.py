@@ -13,15 +13,16 @@ np.random.seed(100)
 ###############################################################################
 corner_detector = 'harris'
 
-ransac_params = {'s':3, 'N':10, 'd':0.5, 'T':5}
+ransac_imp = 'custom'   # 'custom' / 'opencv'
+ransac_params = {'s':3, 'N':100, 'd':0.5, 'T':5}
 
 ###############################################################################
-image_set_dir = "./Images/Pair-1/"
-img1_rgb = skimage.io.imread(image_set_dir+'left.png')
+image_set_dir = "./Images/Pair-2/"
+img1_rgb = skimage.io.imread(image_set_dir+'left.jpeg')
 img1_rgb = img1_rgb[:,:,:3]
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
 
-img2_rgb = skimage.io.imread(image_set_dir+'right.png')
+img2_rgb = skimage.io.imread(image_set_dir+'right.jpeg')
 img2_rgb = img2_rgb[:,:,:3]
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
@@ -59,9 +60,9 @@ euc_distance_matrix = utils.compute_euclidean_distances(img1_descriptors, img2_d
 correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptors)
 
 # Matching keypoint pair indices.
-matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
-                                                similarity_type='euc_distance',
-                                                threshold=0.2)
+matching_kpt_pair_indices = utils.get_matchings(correlation_matrix,
+                                                similarity_type='correlation',
+                                                threshold=0.97)
 
 # Visualize keypoints and matchings
 vis.set_matches(matching_kpt_pair_indices)
@@ -69,10 +70,15 @@ vis.show_keypoints(best_matches=True)
 
 
 # Perform RANSAC to obtain the affine matrix
-affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
-                                    matching_kpt_pair_indices,
-                                    ransac_params)
+if ransac_imp == 'custom':
+    affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
+                                        matching_kpt_pair_indices,
+                                        ransac_params)
+if ransac_imp == 'opencv':
+    affine_matrix = ransac.apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices)
+
+
 # Apply Affine transform
-img2_warped = cv2.warpAffine(img2_rgb, affine_matrix[:2,:], (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
+img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
 
 vis.stitch_and_display(img2_warped)

@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params):
     img1_kpts = np.array([kp.pt for kp in img1_kpts])
@@ -39,7 +40,7 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
             inlier_img2_kpts = np.append(inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1)), axis=1)
 
             candidate_model, residuals, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
-            candidate_model_list.append(tuple([candidate_model, np.sum(residuals)]))
+            candidate_model_list.append(tuple([candidate_model, np.mean(residuals)]))
 
     # if inlier_indices.shape[0] == 0:
     #     raise Exception("No satisfactory inliers for given constraints.")
@@ -49,3 +50,12 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
     affine_matrix = candidate_model_list[0][0]
 
     return affine_matrix.T
+
+
+def apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices):
+    img1_kpts = np.array([kp.pt for kp in img1_kpts])
+    img1_kpts_match = img1_kpts[matching_kpt_pair_indices[:,0]]
+    img2_kpts = np.array([kp.pt for kp in img2_kpts])
+    img2_kpts_match = img2_kpts[matching_kpt_pair_indices[:,1]]
+    affine_matrix, status = cv2.findHomography(img2_kpts_match, img1_kpts_match, cv2.RANSAC,5.0)
+    return affine_matrix
