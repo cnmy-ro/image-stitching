@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 
 import utils, ransac
 
+np.random.seed(0)
 
 ###############################################################################
 #   CONFIG
 ###############################################################################
 corner_detector = 'harris'
 
-ransac_params = {'s':3, 'N':10, 'd':0.5, 'T':10}
+ransac_params = {'s':3, 'N':10, 'd':0.8, 'T':10}
 
 ###############################################################################
 image_set_dir = "./Images/Pair-1/"
@@ -60,7 +61,18 @@ matching_kpt_pair_indices = utils.get_matchings(euc_distance_matrix,
 #                                img1_kpts, img2_kpts,
 #                                matching_kpt_pair_indices)
 
-# Perform RANSAC
+# Perform RANSAC to obtain the affine matrix
 affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
                                     matching_kpt_pair_indices,
                                     ransac_params)
+# Apply Affine transform
+img2_warped = cv2.warpAffine(img2_gray, affine_matrix[:2,:], (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
+
+stitched_image = np.zeros((img1_gray.shape[0],
+                           img1_gray.shape[1]+img2_gray.shape[1])).astype(np.uint8)
+
+img2_warped[:, :img1_gray.shape[1]] = img1_gray[:,:]
+stitched_image_temp = np.maximum(stitched_image, [0])
+
+plt.imshow(img2_warped, cmap='gray')
+#plt.imshow(img1_gray, cmap='gray')
