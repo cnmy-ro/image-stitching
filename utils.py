@@ -52,20 +52,3 @@ def get_matchings(similarity_matrix, similarity_type, threshold):
     return matching_kpt_pair_indices
 
 
-def evaluate_affine_matrix(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-    img1_kpts = np.array([kp.pt for kp in img1_kpts])
-    img1_kpts_matches = img1_kpts[matching_kpt_pair_indices[:,0]]
-    img1_kpts_matches = np.hstack( (img1_kpts_matches, np.ones((img1_kpts_matches.shape[0],1))) )
-
-    img2_kpts = np.array([kp.pt for kp in img2_kpts])
-    img2_kpts_matches = img2_kpts[matching_kpt_pair_indices[:,1]]
-    img2_kpts_matches = np.hstack((img2_kpts_matches, np.ones((img2_kpts_matches.shape[0],1))) )
-
-    img2_kpts_matches_warped = np.dot(img2_kpts_matches, affine_matrix.T)
-
-    euc_distance = 0
-    for i in range(img1_kpts_matches.shape[0]):
-        euc_distance += np.linalg.norm(img1_kpts_matches[i]-img2_kpts_matches_warped[i], ord=2)
-    euc_distance /= img1_kpts_matches.shape[0]
-
-    return euc_distance

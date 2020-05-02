@@ -12,14 +12,17 @@ np.random.seed(100)
 #   CONFIG
 ###############################################################################
 corner_detector = 'harris' # 'harris' / 'sift'
-descriptor = 'custom_gray_intensities'  # 'custom_gray_intensities' / 'custom_rgb_intensities'/ 'opencv_sift'
+descriptor = 'custom_rgb_intensities'  # 'custom_gray_intensities' / 'custom_rgb_intensities'/ 'opencv_sift'
 patch_size = 7
 
 matching_threshold = 0.995
 
-ransac_implementation = 'custom'   # 'custom' / 'opencv'
+ransac_implementation = 'custom'   # 'custom' / 'opencv's
+sample_size = 5
+n_iterations = 100
+tolerance = 10
 T_frac = 0.4  # Fraction of the no. of matched kpts
-ransac_params = {'s':5, 'N':100, 'd':20, 'T':None}
+
 
 ###############################################################################
 # Define the metrics for RANSAC
@@ -97,14 +100,15 @@ vis.draw_matches(title="All matches | Patch size: {} | Correlation threshold: {}
 ###############################################################################
 # Perform RANSAC to obtain the affine matrix
 if ransac_implementation == 'custom':
-    ransac_params['T'] = round(T_frac * matching_kpt_pair_indices.shape[0])
-    affine_matrix, avg_residual, inlier_indices = ransac.apply_RANSAC(img1_kpts, img2_kpts,
-                                                                      matching_kpt_pair_indices,
-                                                                      ransac_params)
+    inlier_threshold = round(T_frac * matching_kpt_pair_indices.shape[0])
+    ransac_estimator = ransac.RANSAC_Estimator(sample_size, n_iterations, tolerance, inlier_threshold)
+
+    affine_matrix, avg_residual, inlier_indices = ransac_estimator.estimate_affine_matrix(img1_kpts, img2_kpts,
+                                                                                          matching_kpt_pair_indices)
 
     metrics['avg-residual'] = avg_residual
     metrics['inlier-outlier-ratio'] = inlier_indices.shape[0]/(matching_kpt_pair_indices.shape[0]-inlier_indices.shape[0])
-    metrics['avg-euc-dist-all-matches'] = utils.evaluate_affine_matrix(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indices)
+    metrics['avg-euc-dist-all-matches'] = ransac.evaluate_model(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indices)
 
     print("Avg residual for the inliers: {:.3f}".format(metrics['avg-residual']))
     print("Inlier to Outlier ratio: {:.3f}".format(metrics['inlier-outlier-ratio']))

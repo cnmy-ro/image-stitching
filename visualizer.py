@@ -68,7 +68,7 @@ class Visualizer:
 
             ax.plot( [ self.img1_kpts[self.inlier_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[self.inlier_indices[:,1], 0]  ],
                      [ self.img1_kpts[self.inlier_indices[:,0], 1], self.img2_kpts[self.inlier_indices[:,1], 1] ],
-                      color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+                     color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
 
             outlier_indices = []
             for indices in self.matching_kpt_pair_indices:
@@ -77,10 +77,10 @@ class Visualizer:
             outlier_indices = np.array(outlier_indices)
             ax.plot( [ self.img1_kpts[outlier_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[outlier_indices[:,1], 0]  ],
                      [ self.img1_kpts[outlier_indices[:,0], 1], self.img2_kpts[outlier_indices[:,1], 1] ],
-                      color=outlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+                     color=outlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
 
         else:
-            color = 'purple'
+            color = 'green'
             ax.plot( [ self.img1_kpts[self.matching_kpt_pair_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[self.matching_kpt_pair_indices[:,1], 0]  ],
                      [ self.img1_kpts[self.matching_kpt_pair_indices[:,0], 1], self.img2_kpts[self.matching_kpt_pair_indices[:,1], 1] ],
                      color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
