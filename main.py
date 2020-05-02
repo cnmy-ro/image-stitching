@@ -11,10 +11,12 @@ np.random.seed(100)
 ###############################################################################
 #   CONFIG
 ###############################################################################
-corner_detector = 'harris'
+corner_detector = 'harris' # 'harris' / 'sift'
+descriptor = 'custom_intensities'  # 'custom_intensities' / 'opencv_sift'
+patch_size = 5
 
-ransac_imp = 'custom'   # 'custom' / 'opencv'
-ransac_params = {'s':3, 'N':100, 'd':0.5, 'T':5}
+ransac_imp = 'opencv'   # 'custom' / 'opencv'
+ransac_params = {'s':3, 'N':100, 'd':0.5, 'T':8}
 
 ###############################################################################
 image_set_dir = "./Images/Pair-2/"
@@ -32,7 +34,7 @@ sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
 
 if corner_detector == 'harris':
     # Get Harris corners: np array of (row,col) pairs each representing a point
-    img1_kpts, img2_kpts = utils.get_Harris_pts(img1_gray, img2_gray)
+    img1_kpts, img2_kpts = utils.get_Harris_corners(img1_gray, img2_gray)
     # Convert to list of cv2 KeyPoint objects
     img1_kpts = utils.cvt_to_cv2KeyPoints(img1_kpts)
     img2_kpts = utils.cvt_to_cv2KeyPoints(img2_kpts)
@@ -42,11 +44,17 @@ if corner_detector == 'sift':
     img1_kpts = sift.detect(img1_gray,None)
     img2_kpts = sift.detect(img2_gray,None)
 
-# Extract descriptors using the images and their keypoints
-img1_kpts, img1_descriptors = sift.compute(img1_gray,img1_kpts)
-img2_kpts, img2_descriptors = sift.compute(img2_gray,img2_kpts)
-
 vis.set_keypoints(img1_kpts, img2_kpts)
+
+# Extract descriptors using the images and their keypoints
+if descriptor == 'opencv_sift':
+    img1_kpts, img1_descriptors = sift.compute(img1_gray,img1_kpts)
+    img2_kpts, img2_descriptors = sift.compute(img2_gray,img2_kpts)
+
+if descriptor == 'custom_intensities':
+    img1_descriptors = utils.compute_descriptors(img1_gray, img1_kpts, descriptor='custom_intensities', patch_size=patch_size)
+    img2_descriptors = utils.compute_descriptors(img2_gray, img2_kpts, descriptor='custom_intensities', patch_size=patch_size)
+
 
 # Normalize the descriptors
 img1_descriptors = utils.normalize(img1_descriptors)
@@ -62,7 +70,7 @@ correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptor
 # Matching keypoint pair indices.
 matching_kpt_pair_indices = utils.get_matchings(correlation_matrix,
                                                 similarity_type='correlation',
-                                                threshold=0.97)
+                                                threshold=0.99)
 
 # Visualize keypoints and matchings
 vis.set_matches(matching_kpt_pair_indices)

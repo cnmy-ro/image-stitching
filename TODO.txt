@@ -24,8 +24,10 @@ TASKS:
 
 TODOs:
 1. Feature descriptors for Harris points
-2. Correlation as similarity measure
-3. cv.warpPerspective function
+2. Improve matching
+3. Improve RANSAC
+
+
 
 MEASUREMENTS:
 1. RANSAC:

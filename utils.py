@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # Key point extraction and matching stuff
 ###############################################################################
 
-def get_Harris_pts(img1_gray, img2_gray):
+def get_Harris_corners(img1_gray, img2_gray):
     img1_harris = cv2.cornerHarris(img1_gray, 3, 3, 0.04)
     #img1_harris = skimage.feature.corner_harris(img1_gray, k=0.05)
     img1_kpts = skimage.feature.corner_peaks(img1_harris, min_distance=1) # Format: (row,col)
@@ -28,11 +28,42 @@ def cvt_to_cv2KeyPoints(xy_pairs):
         cv2_kpts.append( cv2.KeyPoint(xy_pairs[i][0], xy_pairs[i][1], 1) )
     return cv2_kpts
 
-def normalize(descriptors):
-    for i in range(descriptors.shape[0]):
-        descriptors[i,:] = descriptors[i,:]/np.linalg.norm(descriptors[i,:],ord=2)
-    return descriptors
 
+def compute_descriptors(img_gray, img_kpts, descriptor='custom_intensities', patch_size=5):
+    if patch_size%2 == 0:
+        raise Exception("Patch size should be an odd number")
+
+    img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
+    img_descriptors = np.zeros((img_kpts.shape[0], patch_size*patch_size))
+    for i,kp in enumerate(img_kpts):
+        # key-points are xy. But indexing needs (row,col) -> swap them
+        patch = img_gray[max(0, kp[1]-patch_size//2) : min(img_gray.shape[0], kp[1]+patch_size//2+1),
+                         max(0, kp[0]-patch_size//2) : min(img_gray.shape[1], kp[0]+patch_size//2+1)]
+
+        if kp[0] - patch_size//2 < 0:
+            n = - (kp[0] - patch_size//2)
+            patch = np.insert(patch, np.arange(0,n), 0, axis=1)
+
+        if kp[1] - patch_size//2 < 0:
+            n = - (kp[1] - patch_size//2)
+            patch = np.insert(patch, np.arange(0,n), 0, axis=0)
+
+        if kp[0] + patch_size//2 >= img_gray.shape[1]:
+            n = kp[0] + patch_size//2 + 1 - img_gray.shape[1]
+            patch = np.insert(patch, np.arange(patch_size-n, patch_size), 0, axis=1)
+
+        if kp[1] + patch_size//2 >= img_gray.shape[0]:
+            n = kp[1] + patch_size//2 + 1 - img_gray.shape[0]
+            patch = np.insert(patch, np.arange(patch_size-n, patch_size), 0, axis=0)
+
+        img_descriptors[i,:] = patch.flatten()
+    return img_descriptors
+
+
+def normalize(img_descriptors):
+    for i in range(img_descriptors.shape[0]):
+        img_descriptors[i,:] = img_descriptors[i,:]/np.linalg.norm(img_descriptors[i,:],ord=2)
+    return img_descriptors
 
 def compute_euclidean_distances(img1_descriptors, img2_descriptors):
     distance_matrix = scipy.spatial.distance_matrix(img1_descriptors, img2_descriptors)
