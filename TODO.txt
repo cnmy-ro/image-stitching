@@ -38,7 +38,7 @@ MEASUREMENTS:
 1. RANSAC:
     - Ratio of inliers:outliers for each candidate model
     - No. of inliers and outliers, avg. residual of the inliers for the best model
-    - Display location of inliers on both images (as a "matching" diagram) [cv2.drawMatches() function]
+    - Display location of inliers on both images (as a "matching" diagram)
     - Accuracy score: Euc distance b/w "chosen" (best-matching maybe) keypts of img1 and warped img2
 
 MISC. TODOs:

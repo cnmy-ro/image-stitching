@@ -13,6 +13,7 @@ class Visualizer:
         self.img1_kpts = None
         self.img2_kpts = None
         self.matching_kpt_pair_indices = None
+        self.inlier_indices = None
 
         self.save_figs = save_figs
 
@@ -22,6 +23,9 @@ class Visualizer:
 
     def set_matches(self, matching_kpt_pair_indices):
         self.matching_kpt_pair_indices = matching_kpt_pair_indices
+
+    def set_inliers(self, inlier_indices):
+        self.inlier_indices = inlier_indices
 
 
     def draw_keypoints(self):
@@ -57,12 +61,30 @@ class Visualizer:
         #fig.subplots_adjust(wspace=0.2, hspace=0.1, top=0.95, bottom=0.05, left=0.05, right=0.95)
         combined_img = np.hstack((self.img1_rgb, self.img2_rgb))
         ax.imshow(combined_img)
-        for m_idxs in self.matching_kpt_pair_indices:
-            #color = tuple(np.random.random((3,)))
-            color = 'blue'
-            ax.plot( [ self.img1_kpts[m_idxs[0], 0], self.img1_rgb.shape[1] + self.img2_kpts[m_idxs[1], 0]  ],
-                     [ self.img1_kpts[m_idxs[0], 1], self.img2_kpts[m_idxs[1], 1] ],
-                      color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
+
+        if self.inlier_indices is not None:
+            inlier_color = 'blue'
+            outlier_color = 'red'
+
+            ax.plot( [ self.img1_kpts[self.inlier_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[self.inlier_indices[:,1], 0]  ],
+                     [ self.img1_kpts[self.inlier_indices[:,0], 1], self.img2_kpts[self.inlier_indices[:,1], 1] ],
+                      color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+
+            outlier_indices = []
+            for indices in self.matching_kpt_pair_indices:
+                if indices not in self.inlier_indices:
+                    outlier_indices.append(indices)
+            outlier_indices = np.array(outlier_indices)
+            ax.plot( [ self.img1_kpts[outlier_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[outlier_indices[:,1], 0]  ],
+                     [ self.img1_kpts[outlier_indices[:,0], 1], self.img2_kpts[outlier_indices[:,1], 1] ],
+                      color=outlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+
+        else:
+            color = 'purple'
+            ax.plot( [ self.img1_kpts[self.matching_kpt_pair_indices[:,0], 0], self.img1_rgb.shape[1] + self.img2_kpts[self.matching_kpt_pair_indices[:,1], 0]  ],
+                     [ self.img1_kpts[self.matching_kpt_pair_indices[:,0], 1], self.img2_kpts[self.matching_kpt_pair_indices[:,1], 1] ],
+                     color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
+
         ax.set_title(title)
         ax.axis('off')
         plt.show()

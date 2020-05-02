@@ -13,13 +13,20 @@ np.random.seed(100)
 ###############################################################################
 corner_detector = 'harris' # 'harris' / 'sift'
 descriptor = 'custom_gray_intensities'  # 'custom_gray_intensities' / 'custom_rgb_intensities'/ 'opencv_sift'
-patch_size = 9
+patch_size = 7
 
 matching_threshold = 0.995
 
 ransac_implementation = 'custom'   # 'custom' / 'opencv'
-T_frac = 0.2  # Fraction of the no. of matched kpts
-ransac_params = {'s':5, 'N':100, 'd':5, 'T':None}
+T_frac = 0.4  # Fraction of the no. of matched kpts
+ransac_params = {'s':5, 'N':100, 'd':20, 'T':None}
+
+###############################################################################
+# Define the metrics for RANSAC
+
+metrics = {'inlier-outlier-ratio': None,
+           'avg-residual': None,
+           'avg-euc-dist-all-matches': None}      # Avg of Euc dist between transformed img2 kpts and the correspnding matching img1 kpts
 
 ###############################################################################
 image_set_dir = "./Images/Pair-1/"
@@ -31,7 +38,7 @@ img2_rgb = skimage.io.imread(image_set_dir+'right.png')
 img2_rgb = img2_rgb[:,:,:3]
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
-vis = visualizer.Visualizer(img1_rgb, img2_rgb, save_figs=True)
+vis = visualizer.Visualizer(img1_rgb, img2_rgb, save_figs=False)
 
 sift = cv2.xfeatures2d.SIFT_create(nfeatures=100)
 
@@ -91,10 +98,20 @@ vis.draw_matches(title="All matches | Patch size: {} | Correlation threshold: {}
 # Perform RANSAC to obtain the affine matrix
 if ransac_implementation == 'custom':
     ransac_params['T'] = round(T_frac * matching_kpt_pair_indices.shape[0])
-    affine_matrix, avg_residual = ransac.apply_RANSAC(img1_kpts, img2_kpts,
-                                                       matching_kpt_pair_indices,
-                                                       ransac_params)
-    print("Avg residual for the inliers:", avg_residual)
+    affine_matrix, avg_residual, inlier_indices = ransac.apply_RANSAC(img1_kpts, img2_kpts,
+                                                                      matching_kpt_pair_indices,
+                                                                      ransac_params)
+
+    metrics['avg-residual'] = avg_residual
+    metrics['inlier-outlier-ratio'] = inlier_indices.shape[0]/(matching_kpt_pair_indices.shape[0]-inlier_indices.shape[0])
+    metrics['avg-euc-dist-all-matches'] = utils.evaluate_affine_matrix(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indices)
+
+    print("Avg residual for the inliers: {:.3f}".format(metrics['avg-residual']))
+    print("Inlier to Outlier ratio: {:.3f}".format(metrics['inlier-outlier-ratio']))
+    print("Average Euclidean distance: {:.3f}".format(metrics['avg-euc-dist-all-matches']) )
+
+    vis.set_inliers(inlier_indices)
+
 
 if ransac_implementation == 'opencv':
     affine_matrix = ransac.apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices)
@@ -102,4 +119,5 @@ if ransac_implementation == 'opencv':
 ###############################################################################
 # Apply Affine transform
 img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
+vis.draw_matches(title="Inliers and Outliers among all matches")
 vis.stitch_and_display(img2_warped, display_all=False)
