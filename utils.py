@@ -29,37 +29,6 @@ def cvt_to_cv2KeyPoints(xy_pairs):
     return cv2_kpts
 
 
-def compute_descriptors(img_gray, img_kpts, descriptor='custom_intensities', patch_size=5):
-    if patch_size%2 == 0:
-        raise Exception("Patch size should be an odd number")
-
-    img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
-    img_descriptors = np.zeros((img_kpts.shape[0], patch_size*patch_size))
-    for i,kp in enumerate(img_kpts):
-        # key-points are xy. But indexing needs (row,col) -> swap them
-        patch = img_gray[max(0, kp[1]-patch_size//2) : min(img_gray.shape[0], kp[1]+patch_size//2+1),
-                         max(0, kp[0]-patch_size//2) : min(img_gray.shape[1], kp[0]+patch_size//2+1)]
-
-        if kp[0] - patch_size//2 < 0:
-            n = - (kp[0] - patch_size//2)
-            patch = np.insert(patch, np.arange(0,n), 0, axis=1)
-
-        if kp[1] - patch_size//2 < 0:
-            n = - (kp[1] - patch_size//2)
-            patch = np.insert(patch, np.arange(0,n), 0, axis=0)
-
-        if kp[0] + patch_size//2 >= img_gray.shape[1]:
-            n = kp[0] + patch_size//2 + 1 - img_gray.shape[1]
-            patch = np.insert(patch, np.arange(patch_size-n, patch_size), 0, axis=1)
-
-        if kp[1] + patch_size//2 >= img_gray.shape[0]:
-            n = kp[1] + patch_size//2 + 1 - img_gray.shape[0]
-            patch = np.insert(patch, np.arange(patch_size-n, patch_size), 0, axis=0)
-
-        img_descriptors[i,:] = patch.flatten()
-    return img_descriptors
-
-
 def normalize(img_descriptors):
     for i in range(img_descriptors.shape[0]):
         img_descriptors[i,:] = img_descriptors[i,:]/np.linalg.norm(img_descriptors[i,:],ord=2)

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+import utils
 
 class Visualizer:
     def __init__(self, img1, img2, save_figs):
@@ -23,21 +24,23 @@ class Visualizer:
         self.matching_kpt_pair_indices = matching_kpt_pair_indices
 
 
-    def show_keypoints(self, best_matches=True):
+    def draw_keypoints(self):
         fig, [ax1, ax2] = plt.subplots(1,2)
         fig.set_size_inches(0.25*18.5, 0.20*10.5)
         fig.set_dpi(200)
         fig.subplots_adjust(wspace=0.2, hspace=0.1, top=0.95, bottom=0.05, left=0.05, right=0.95)
 
         ax1.imshow(self.img1_gray, cmap='gray')
-        ax1.plot(self.img1_kpts[:, 0], self.img1_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=2)
+        ax1.plot(self.img1_kpts[:, 0], self.img1_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=1)
         ax2.imshow(self.img2_gray, cmap='gray')
-        ax2.plot(self.img2_kpts[:, 0], self.img2_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=2)
-        # Plot matchings
-        for m_idxs in self.matching_kpt_pair_indices:
-            color = tuple(np.random.random((3,)))
-            ax1.plot(self.img1_kpts[m_idxs[0], 0], self.img1_kpts[m_idxs[0], 1], color=color, marker='*', linestyle='None', markersize=5)
-            ax2.plot(self.img2_kpts[m_idxs[1], 0], self.img2_kpts[m_idxs[1], 1], color=color, marker='*', linestyle='None', markersize=5)
+        ax2.plot(self.img2_kpts[:, 0], self.img2_kpts[:, 1], color='red', marker='o', linestyle='None', markersize=1)
+
+        # # Plot matchings
+        # for m_idxs in self.matching_kpt_pair_indices:
+        #     color = tuple(np.random.random((3,)))
+        #     ax1.plot(self.img1_kpts[m_idxs[0], 0], self.img1_kpts[m_idxs[0], 1], color=color, marker='*', linestyle='None', markersize=5)
+        #     ax2.plot(self.img2_kpts[m_idxs[1], 0], self.img2_kpts[m_idxs[1], 1], color=color, marker='*', linestyle='None', markersize=5)
+
         ax1.axis('off')
         ax1.set_title("Left")
         ax2.axis('off')
@@ -45,6 +48,23 @@ class Visualizer:
         #fig.suptitle("Detected keypoints and best matches", fontsize='x-large')
         if self.save_figs:
             fig.savefig("./Results/Keypoints_and_best_matches.png")
+        plt.show()
+
+    def draw_matches(self, title):
+        fig, ax = plt.subplots()
+        #fig.set_size_inches(0.25*18.5, 0.20*10.5)
+        fig.set_dpi(200)
+        #fig.subplots_adjust(wspace=0.2, hspace=0.1, top=0.95, bottom=0.05, left=0.05, right=0.95)
+        combined_img = np.hstack((self.img1_rgb, self.img2_rgb))
+        ax.imshow(combined_img)
+        for m_idxs in self.matching_kpt_pair_indices:
+            #color = tuple(np.random.random((3,)))
+            color = 'blue'
+            ax.plot( [ self.img1_kpts[m_idxs[0], 0], self.img1_rgb.shape[1] + self.img2_kpts[m_idxs[1], 0]  ],
+                     [ self.img1_kpts[m_idxs[0], 1], self.img2_kpts[m_idxs[1], 1] ],
+                      color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
+        ax.set_title(title)
+        ax.axis('off')
         plt.show()
 
 

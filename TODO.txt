@@ -23,17 +23,22 @@ TASKS:
 ###############################################################################
 
 TODOs:
-1. Feature descriptors for Harris points
-2. Improve matching
-3. Improve RANSAC
+1. Improve matching
+2. Improve RANSAC
+3. Add custom_rgb_intensities descriptor and test
+4. Design experiments
 
 
+TO INCLUDE IN REPORT:
+1. Detection: Harris
+2. Description: sift, custom
+3. RANSAC: custom implementation
 
 MEASUREMENTS:
 1. RANSAC:
     - Ratio of inliers:outliers for each candidate model
     - No. of inliers and outliers, avg. residual of the inliers for the best model
-    - Display location of inliers on both images (as a "matching" diagram)
+    - Display location of inliers on both images (as a "matching" diagram) [cv2.drawMatches() function]
     - Accuracy score: Euc distance b/w "chosen" (best-matching maybe) keypts of img1 and warped img2
 
 MISC. TODOs:
