@@ -91,11 +91,11 @@ class Visualizer:
             ax3.imshow(stitched_image)
 
             ax1.axis('off')
-            #ax1.set_title("Left image")
+            ax1.set_title("Left image")
             ax2.axis('off')
-            #ax2.set_title("Right image warped")
+            ax2.set_title("Right image warped")
             ax3.axis('off')
-            #ax3.set_title("Stitched image")
+            ax3.set_title("Stitched image")
             if self.save_figs:
                 fig.savefig("./Results/Stitching_result.png")
             plt.show()
@@ -105,5 +105,6 @@ class Visualizer:
             fig.set_size_inches(0.5*18.5, 0.4*10.5)
             fig.set_dpi(200)
             ax.imshow(stitched_image)
+            ax.set_title("Stitched Image")
             ax.axis('off')
             plt.show()

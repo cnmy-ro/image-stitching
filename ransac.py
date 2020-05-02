@@ -7,16 +7,33 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
 
     candidate_model_list = []
     for i in range(ransac_params['N']):
+        #print("Iteration:",i)
         # Sample random matching pairs
         indices_of_indices = np.random.choice(matching_kpt_pair_indices.shape[0], size=ransac_params['s'], replace=False)
         sampled_kpt_pair_indices = matching_kpt_pair_indices[indices_of_indices]
         sampled_img1_kpts, sampled_img2_kpts  = img1_kpts[sampled_kpt_pair_indices[:,0]], img2_kpts[sampled_kpt_pair_indices[:,1]]
 
-        # Fit a line
+        # Fit a linear model
         sampled_img1_kpts = np.append(sampled_img1_kpts, np.ones((ransac_params['s'],1)), axis=1)
         sampled_img2_kpts = np.append(sampled_img2_kpts, np.ones((ransac_params['s'],1)), axis=1)
-        model = np.linalg.lstsq(sampled_img2_kpts, sampled_img1_kpts, rcond=None)[0]
+        '''
+        Solve for X in --  A.X = B
 
+          > A: sampled_img2_kpts; Format: [[x1,y1,1],
+                                           [x2,y2,1],
+                                           [x3,y3,1]]
+
+          > B: sampled_img1_kpts; Format: [[u1,v1,1],
+                                           [u2,v2,1],
+                                           [u3,v3,1]]
+
+          > X: model; Format: [[a,d,1],
+                               [b,e,1],
+                               [c,f,1]]
+
+        '''
+        model = np.linalg.lstsq(sampled_img2_kpts, sampled_img1_kpts, rcond=None)[0]
+        # model = np.linalg.solve(sampled_img2_kpts, sampled_img1_kpts)
         # Check how many other points lie within the tolerance zone
         inlier_count = 0
         inlier_indices = []
@@ -24,12 +41,16 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
             if indices not in sampled_kpt_pair_indices:
                 pt2 = img2_kpts[indices[1]]
                 pt1_true = np.append(img1_kpts[indices[0]], [1])
-                pt1_hypotesis = np.dot(model.T, np.append(pt2, [1]))
-                if np.linalg.norm(pt1_true-pt1_hypotesis,ord=2) <= ransac_params['d']:
+                pt1_hypothesis = np.dot(np.append(pt2, [1]), model)
+
+                # Calculate error(euc distance b/w prediction and truth). In image coordinates.
+                dist_from_model = np.linalg.norm(pt1_true-pt1_hypothesis,ord=2)
+
+                if dist_from_model <= ransac_params['d']:
+                    #print(dist_from_model)
                     inlier_count += 1
                     inlier_indices.append(indices)
         inlier_indices = np.array(inlier_indices)
-
 
         # Apply threshold
         if inlier_count >= ransac_params['T']:
@@ -40,16 +61,19 @@ def apply_RANSAC(img1_kpts, img2_kpts, matching_kpt_pair_indices, ransac_params)
             inlier_img2_kpts = np.append(inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1)), axis=1)
 
             candidate_model, residuals, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
-            candidate_model_list.append(tuple([candidate_model, np.mean(residuals)]))
+            avg_residual = np.mean(residuals)
+            # candidate_model = np.linalg.solve(inlier_img2_kpts, inlier_img1_kpts)
+            # avg_residual = np.sum(np.square(inlier_img1_kpts-np.dot(inlier_img2_kpts, model)))
+            candidate_model_list.append(tuple([candidate_model, avg_residual]))
 
     # if inlier_indices.shape[0] == 0:
     #     raise Exception("No satisfactory inliers for given constraints.")
 
     # Choose the best model (one with least residual sum value)
     candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
-    affine_matrix = candidate_model_list[0][0]
+    affine_matrix, avg_residual = candidate_model_list[0]
 
-    return affine_matrix.T
+    return affine_matrix.T, avg_residual
 
 
 def apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices):

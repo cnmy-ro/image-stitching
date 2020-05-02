@@ -13,20 +13,21 @@ np.random.seed(100)
 ###############################################################################
 corner_detector = 'harris' # 'harris' / 'sift'
 descriptor = 'custom_gray_intensities'  # 'custom_gray_intensities' / 'custom_rgb_intensities'/ 'opencv_sift'
-patch_size = 5
+patch_size = 9
 
 matching_threshold = 0.995
 
-ransac_implementation = 'opencv'   # 'custom' / 'opencv'
-ransac_params = {'s':3, 'N':1000, 'd':0.8, 'T':4}
+ransac_implementation = 'custom'   # 'custom' / 'opencv'
+T_frac = 0.2  # Fraction of the no. of matched kpts
+ransac_params = {'s':5, 'N':100, 'd':5, 'T':None}
 
 ###############################################################################
-image_set_dir = "./Images/Pair-2/"
-img1_rgb = skimage.io.imread(image_set_dir+'left.jpeg')
+image_set_dir = "./Images/Pair-1/"
+img1_rgb = skimage.io.imread(image_set_dir+'left.png')
 img1_rgb = img1_rgb[:,:,:3]
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
 
-img2_rgb = skimage.io.imread(image_set_dir+'right.jpeg')
+img2_rgb = skimage.io.imread(image_set_dir+'right.png')
 img2_rgb = img2_rgb[:,:,:3]
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
@@ -50,6 +51,7 @@ if corner_detector == 'sift':
 
 vis.set_keypoints(img1_kpts, img2_kpts)
 vis.draw_keypoints()
+
 ###############################################################################
 # Extract descriptors using the images and their keypoints
 if descriptor == 'opencv_sift':
@@ -83,29 +85,21 @@ matching_kpt_pair_indices = utils.get_matchings(correlation_matrix,
 
 # Visualize matchings
 vis.set_matches(matching_kpt_pair_indices)
-vis.draw_matches(title="Best matches")
-
-# bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-# opencv_matches = bf.match(img1_descriptors.astype(np.uint8), img2_descriptors.astype(np.uint8))
-# opencv_matches = sorted(opencv_matches, key = lambda x:x.distance)
-# img3 = np.hstack((img1_gray,img2_gray))
-# img3 = cv2.drawMatches(img1_gray, img1_kpts,
-#                         img2_gray, img2_kpts,
-#                         opencv_matches,
-#                         img3, flags=2)
-# plt.imshow(img3)
+vis.draw_matches(title="All matches | Patch size: {} | Correlation threshold: {}".format(patch_size, matching_threshold))
 
 ###############################################################################
 # Perform RANSAC to obtain the affine matrix
 if ransac_implementation == 'custom':
-    affine_matrix = ransac.apply_RANSAC(img1_kpts, img2_kpts,
-                                        matching_kpt_pair_indices,
-                                        ransac_params)
+    ransac_params['T'] = round(T_frac * matching_kpt_pair_indices.shape[0])
+    affine_matrix, avg_residual = ransac.apply_RANSAC(img1_kpts, img2_kpts,
+                                                       matching_kpt_pair_indices,
+                                                       ransac_params)
+    print("Avg residual for the inliers:", avg_residual)
+
 if ransac_implementation == 'opencv':
     affine_matrix = ransac.apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices)
-
 
 ###############################################################################
 # Apply Affine transform
 img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
-vis.stitch_and_display(img2_warped)
+vis.stitch_and_display(img2_warped, display_all=False)
