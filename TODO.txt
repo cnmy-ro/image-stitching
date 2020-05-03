@@ -23,10 +23,8 @@ TASKS:
 ###############################################################################
 
 TODOs:
-1. Improve matching
-2. Improve RANSAC
-3. Add custom_rgb_intensities descriptor and test
-4. Design experiments
+ Improve matching
+ Design experiments
 
 
 TO INCLUDE IN REPORT:

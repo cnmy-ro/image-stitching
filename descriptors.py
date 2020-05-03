@@ -2,13 +2,12 @@ import numpy as np
 import scipy.spatial
 import cv2
 import skimage.feature
-import matplotlib.pyplot as plt
 
 def gray_intensities(img_gray, img_kpts, patch_size=5):
     if patch_size%2 == 0:
         raise Exception("Patch size should be an odd number")
 
-    img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
+    # img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
     img_descriptors = np.zeros((img_kpts.shape[0], patch_size*patch_size))
     for i,kp in enumerate(img_kpts):
         # key-points are xy. But indexing needs (row,col) -> swap them
@@ -45,7 +44,7 @@ def gray_intensities(img_gray, img_kpts, patch_size=5):
 
 
 def rgb_intensities(img_rgb, img_kpts, patch_size=5):
-    img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
+    # img_kpts = np.array([kp.pt for kp in img_kpts]).astype(int)
     img_descriptors = np.zeros((img_kpts.shape[0], patch_size*patch_size*3))
     for i,kp in enumerate(img_kpts):
         # key-points are xy. But indexing needs (row,col) -> swap them

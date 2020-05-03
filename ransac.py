@@ -2,22 +2,18 @@ import numpy as np
 import cv2
 
 
-def evaluate_model(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-    img1_kpts = np.array([kp.pt for kp in img1_kpts])
-    img1_kpts_matches = img1_kpts[matching_kpt_pair_indices[:,0]]
-    img1_kpts_matches = np.hstack( (img1_kpts_matches, np.ones((img1_kpts_matches.shape[0],1))) )
+def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
+    # img1_kpts = np.array([kp.pt for kp in img1_kpts])
+    inlier_img1_kpts = img1_kpts[inlier_indices[:,0]]
+    inlier_img1_kpts = np.hstack( (inlier_img1_kpts, np.ones((inlier_img1_kpts.shape[0],1))) )
 
-    img2_kpts = np.array([kp.pt for kp in img2_kpts])
-    img2_kpts_matches = img2_kpts[matching_kpt_pair_indices[:,1]]
-    img2_kpts_matches = np.hstack((img2_kpts_matches, np.ones((img2_kpts_matches.shape[0],1))) )
+    # img2_kpts = np.array([kp.pt for kp in img2_kpts])
+    inlier_img2_kpts = img2_kpts[inlier_indices[:,1]]
+    inlier_img2_kpts  = np.hstack((inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1))) )
 
-    img2_kpts_matches_warped = np.dot(img2_kpts_matches, affine_matrix.T)
+    inlier_img2_kpts_warped = np.dot(inlier_img2_kpts , affine_matrix.T)
 
-    euc_distance = 0
-    for i in range(img1_kpts_matches.shape[0]):
-        euc_distance += np.linalg.norm(img1_kpts_matches[i]-img2_kpts_matches_warped[i], ord=2)
-    euc_distance /= img1_kpts_matches.shape[0]
-
+    euc_distance = np.mean(np.sqrt(np.sum(np.square(inlier_img1_kpts-inlier_img2_kpts_warped), axis=1)), axis=0)
     return euc_distance
 
 
@@ -27,16 +23,18 @@ def evaluate_model(affine_matrix, img1_kpts, img2_kpts, matching_kpt_pair_indice
 
 class RANSAC_Estimator:
 
-    def __init__(self, sample_size, n_iterations, tolerance, inlier_threshold):
+    def __init__(self, sample_size, n_iterations, tolerance, inlier_fraction_threshold):
         self.sample_size = sample_size
         self.n_iterations = n_iterations
         self.tolerance = tolerance
-        self.inlier_threshold = inlier_threshold
+        self.inlier_fraction_threshold = inlier_fraction_threshold
 
 
     def estimate_affine_matrix(self, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-        img1_kpts = np.array([kp.pt for kp in img1_kpts])
-        img2_kpts = np.array([kp.pt for kp in img2_kpts])
+        # img1_kpts = np.array([kp.pt for kp in img1_kpts])
+        # img2_kpts = np.array([kp.pt for kp in img2_kpts])
+
+        inlier_threshold = round(self.inlier_fraction_threshold * matching_kpt_pair_indices.shape[0])
 
         candidate_model_list = []
         for i in range(self.n_iterations):
@@ -84,19 +82,24 @@ class RANSAC_Estimator:
                         #print(dist_from_model)
                         inlier_count += 1
                         inlier_indices.append(pair_indices)
+
+            # Calculate avg. inlier residual for this model
+            if inlier_count == 0:
+                continue
             inlier_indices = np.array(inlier_indices)
+            inlier_img1_kpts, inlier_img2_kpts = img1_kpts[inlier_indices[:,0]], img2_kpts[inlier_indices[:,1]]
+            inlier_img1_kpts = np.append(inlier_img1_kpts, np.ones((inlier_img1_kpts.shape[0],1)), axis=1)
+            inlier_img2_kpts = np.append(inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1)), axis=1)
 
-            # Apply threshold
-            if inlier_count >= self.inlier_threshold:
+            hypothesis = np.dot(inlier_img2_kpts, model)
+            inlier_residuals = np.sum(np.square(inlier_img1_kpts-hypothesis), axis=1)
+            avg_inlier_residual = np.mean(inlier_residuals, axis=0)
+
+            # Apply threshold and Refit
+            if inlier_count >= inlier_threshold:
                 # The model is good -- Fit the model on all the inliers
-                inlier_img1_kpts, inlier_img2_kpts = img1_kpts[inlier_indices[:,0]], img2_kpts[inlier_indices[:,1]]
-
-                inlier_img1_kpts = np.append(inlier_img1_kpts, np.ones((inlier_img1_kpts.shape[0],1)), axis=1)
-                inlier_img2_kpts = np.append(inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1)), axis=1)
-
-                candidate_model, residuals, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
-                avg_residual = np.mean(residuals)
-                candidate_model_list.append(tuple([candidate_model, avg_residual, inlier_indices]))
+                candidate_model, _, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
+                candidate_model_list.append(tuple([candidate_model, avg_inlier_residual, inlier_indices]))
 
         # Choose the best model (one with least residual sum value)
         if len(candidate_model_list) == 0:
@@ -106,13 +109,3 @@ class RANSAC_Estimator:
         affine_matrix, avg_residual, inlier_indices = candidate_model_list[0]
         return affine_matrix.T, avg_residual, inlier_indices
 
-
-###############################################################################
-
-def apply_RANSAC_opencv(img1_kpts, img2_kpts, matching_kpt_pair_indices):
-    img1_kpts = np.array([kp.pt for kp in img1_kpts])
-    img1_kpts_match = img1_kpts[matching_kpt_pair_indices[:,0]]
-    img2_kpts = np.array([kp.pt for kp in img2_kpts])
-    img2_kpts_match = img2_kpts[matching_kpt_pair_indices[:,1]]
-    affine_matrix, status = cv2.findHomography(img2_kpts_match, img1_kpts_match, cv2.RANSAC,5.0)
-    return affine_matrix
