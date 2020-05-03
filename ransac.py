@@ -99,6 +99,9 @@ class RANSAC_Estimator:
                 candidate_model_list.append(tuple([candidate_model, avg_residual, inlier_indices]))
 
         # Choose the best model (one with least residual sum value)
+        if len(candidate_model_list) == 0:
+            raise Exception("Couldn't find a good model for the given constraints")
+
         candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
         affine_matrix, avg_residual, inlier_indices = candidate_model_list[0]
         return affine_matrix.T, avg_residual, inlier_indices

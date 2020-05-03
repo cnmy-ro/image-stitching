@@ -1,4 +1,4 @@
-import sys
+import os, sys
 import numpy as np
 import cv2
 import skimage.io
@@ -32,13 +32,15 @@ metrics = {'inlier-outlier-ratio': None,
            'avg-euc-dist-all-matches': None}      # Avg of Euc dist between transformed img2 kpts and the correspnding matching img1 kpts
 
 ###############################################################################
-image_set_dir = "./Images/Pair-1/"
-img1_rgb = skimage.io.imread(image_set_dir+'left.png')
-img1_rgb = img1_rgb[:,:,:3]
+image_set_dir = "./Images/Pair-3/"
+image_paths = [ image_set_dir + filename for filename in sorted(os.listdir(image_set_dir)) ]
+
+img1 = cv2.imread(image_paths[0])
+img1_rgb = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 img1_gray = cv2.cvtColor(img1_rgb, cv2.COLOR_RGB2GRAY)
 
-img2_rgb = skimage.io.imread(image_set_dir+'right.png')
-img2_rgb = img2_rgb[:,:,:3]
+img2 = cv2.imread(image_paths[1])
+img2_rgb = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 img2_gray = cv2.cvtColor(img2_rgb, cv2.COLOR_RGB2GRAY)
 
 vis = visualizer.Visualizer(img1_rgb, img2_rgb, save_figs=False)
