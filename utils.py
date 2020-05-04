@@ -37,12 +37,26 @@ def compute_correlation(img1_descriptors, img2_descriptors):
 
 
 def get_matchings(similarity_matrix, similarity_type, threshold):
-    # NN matching with replacement - one target element can match with multiple pts
+    # 1-way NN matching with replacement (no vice versa condition; one target element can match with multiple pts)
     if similarity_type == 'euc_distance':
         # Threshold defines the max allowable distance
         matching_kpt_pair_indices = np.argwhere(similarity_matrix <= threshold)
     if similarity_type == 'correlation':
+        # Threshold defines the min allowable correlation
         matching_kpt_pair_indices = np.argwhere(similarity_matrix >= threshold)
     return matching_kpt_pair_indices
 
+def get_matchings_2(similarity_matrix, similarity_type, threshold):
+    # 2-way NN matching without replacement
+    if similarity_type == 'correlation':
+        similarity_matrix_copy = similarity_matrix.copy()
+        matching_kpt_pair_indices = np.array([[-1,-1]])
+        for i in range(similarity_matrix.shape[0]):
+            match_for_i = np.argmax(similarity_matrix_copy[i,:]) # Find best match for i
+            # Check if the vice versa is also true, and apply threshold
+            if i == np.argmax(similarity_matrix_copy[:,match_for_i]) and similarity_matrix[i,match_for_i] >= threshold :
+                matching_kpt_pair_indices = np.append(matching_kpt_pair_indices, np.array([[i,match_for_i]]), axis=0)
+                similarity_matrix_copy[:, match_for_i] = -99
+        np.delete(matching_kpt_pair_indices, 0, axis=0)
+        return matching_kpt_pair_indices
 

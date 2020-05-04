@@ -23,20 +23,24 @@ def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
 
 class RANSAC_Estimator:
 
-    def __init__(self, sample_size, n_iterations, tolerance, inlier_fraction_threshold):
+    def __init__(self, sample_size, n_iterations, tolerance, inlier_threshold):
         self.sample_size = sample_size
         self.n_iterations = n_iterations
         self.tolerance = tolerance
-        self.inlier_fraction_threshold = inlier_fraction_threshold
+        self.inlier_threshold = inlier_threshold
 
 
     def estimate_affine_matrix(self, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-        inlier_threshold = round(self.inlier_fraction_threshold * matching_kpt_pair_indices.shape[0])
+        #inlier_threshold = round(self.inlier_fraction_threshold * matching_kpt_pair_indices.shape[0])
 
         candidate_model_list = []
+        used_samples = []
         for i in range(self.n_iterations):
             # Sample random matching pairs
             indices_of_indices = np.random.choice(matching_kpt_pair_indices.shape[0], size=self.sample_size, replace=False)
+            if tuple(indices_of_indices) in used_samples:
+                continue
+            used_samples.append(tuple(indices_of_indices))
             sampled_kpt_pair_indices = matching_kpt_pair_indices[indices_of_indices]
             sampled_img1_kpts, sampled_img2_kpts  = img1_kpts[sampled_kpt_pair_indices[:,0]], img2_kpts[sampled_kpt_pair_indices[:,1]]
 
@@ -93,7 +97,7 @@ class RANSAC_Estimator:
             avg_inlier_residual = np.mean(inlier_residuals, axis=0)
 
             # Apply threshold and Refit
-            if inlier_count >= inlier_threshold:
+            if inlier_count >= self.inlier_threshold:
                 # The model is good -- Fit the model on all the inliers
                 candidate_model, _, _, _ = np.linalg.lstsq(inlier_img2_kpts, inlier_img1_kpts, rcond=None)
                 candidate_model_list.append(tuple([candidate_model, avg_inlier_residual, inlier_indices]))

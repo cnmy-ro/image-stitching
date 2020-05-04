@@ -4,14 +4,14 @@ import cv2
 
 import utils, descriptors, ransac, visualizer
 
-np.random.seed(100)
+np.random.seed(0)
 
 ###############################################################################
 
 def run_app(img1_path, img2_path,
             descriptor, patch_size,
             matching_threshold,
-            ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_fraction_threshold,
+            ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_threshold,
             visualize=True,
             experiment_id=None,
             case_id=None):
@@ -27,9 +27,9 @@ def run_app(img1_path, img2_path,
             os.makedirs(results_dir)
         with open(results_dir+"result.txt", 'a') as result_file:
             result_file.write(case_id+'\n')
-            config = "Config --\nDescriptor: {}\nPatch size: {}\nRANSAC sample size: {}\nRANSAC iterations: {}\nRANSAC tolerance: {}\nRANSAC inlier fraction threshold: {}".format(descriptor,patch_size,ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_fraction_threshold)
+            config = "Config --\nDescriptor: {}\nPatch size: {}\nMatching threshold: {}RANSAC sample size: {}\nRANSAC iterations: {}\nRANSAC tolerance: {}\nRANSAC inlier fraction threshold: {}".format(descriptor, patch_size, matching_threshold, ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_threshold)
             result_file.write(config)
-
+        print("Experiment: {} | Case: {}".format(experiment_id, case_id))
 
     # Read and prepare the images
     img1 = cv2.imread(img1_path)
@@ -82,7 +82,7 @@ def run_app(img1_path, img2_path,
     correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptors)
 
     # Matching keypoint pair indices.
-    matching_kpt_pair_indices = utils.get_matchings(correlation_matrix,
+    matching_kpt_pair_indices = utils.get_matchings_2(correlation_matrix,
                                                     similarity_type='correlation',
                                                     threshold=matching_threshold)
 
@@ -96,28 +96,32 @@ def run_app(img1_path, img2_path,
     ransac_estimator = ransac.RANSAC_Estimator(ransac_sample_size,
                                                ransac_n_iterations,
                                                ransac_tolerance,
-                                               ransac_inlier_fraction_threshold)
+                                               ransac_inlier_threshold)
 
     affine_matrix, avg_residual, inlier_indices = ransac_estimator.estimate_affine_matrix(img1_kpts, img2_kpts,
                                                                                           matching_kpt_pair_indices)
 
-    metrics = {'inlier-fraction': None,
+    metrics = {'n-inliers': None,
+               'n-outliers': None,
                'avg-inlier-residual': None,
                'avg-inlier-euc-dist': None}
 
     metrics['avg-inlier-residual'] = avg_residual
-    metrics['inlier-fraction'] = inlier_indices.shape[0]/matching_kpt_pair_indices.shape[0]
+    metrics['n-inliers'] = inlier_indices.shape[0]
+    metrics['n-onliers'] = matching_kpt_pair_indices.shape[0]-inlier_indices.shape[0]
     metrics['avg-inlier-euc-dist'] = ransac.evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices)
 
     if experiment_id:
         with open(results_dir+"result.txt", 'a') as result_file:
-            result = "\n\nResult --\nAverage inlier residual (before refitting): {:.3f}\nFraction of inliers: {:.3f}\nAverage euclidean distance: {:.3f}".format( metrics['avg-inlier-residual'], metrics['inlier-fraction'], metrics['avg-inlier-euc-dist'])
+            result = "\n\nResult --\nAverage inlier residual (before refitting): {:.3f}\nNo. of inliers: {}\nNo. of outliers: {}\nAverage euclidean distance: {:.3f}".format( metrics['avg-inlier-residual'], metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-euc-dist'])
             result_file.write(result)
             result_file.write("\n\n----------------------------------------------\n\n")
 
     print("Avg residual for the inliers (before refitting): {:.3f}".format(metrics['avg-inlier-residual']))
-    print("Inlier fraction: {:.3f}".format(metrics['inlier-fraction']))
+    print("No. of inliers: {:.3f}".format(metrics['n-inliers']))
+    print("No. of outliers: {:.3f}".format(metrics['n-onliers']))
     print("Average Euclidean distance: {:.3f}".format(metrics['avg-inlier-euc-dist']) )
+    print("\n")
 
     vis.set_inliers(inlier_indices)
 
@@ -133,23 +137,23 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--img1', type=str, help="Path to image 1",
-                        default="./Images/Pair-6/1.jpeg")
+                        default="./Images/Pair-7/1.jpeg")
     parser.add_argument('--img2', type=str, help="Path to image 2",
-                        default="./Images/Pair-6/2.jpeg")
+                        default="./Images/Pair-7/2.jpeg")
     parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
                         default='custom_rgb_intensities')
     parser.add_argument('--patch_size', type=int, help="5,7,9,...",
-                        default=5)
+                        default=15)
     parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
-                        default=0.990)
+                        default=0.985)
     parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
                         default=3)
     parser.add_argument('--ransac_n_iterations', type=int,
-                        default=100)
+                        default=1000)
     parser.add_argument('--ransac_tolerance', type=int, help="Tolerance value for a kpt pair to be considered an inlier",
                         default=40)
-    parser.add_argument('--ransac_inlier_fraction_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
-                        default=0.1)
+    parser.add_argument('--ransac_inlier_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
+                        default=0.03)
     parser.add_argument('--visualize', type=int,
                         default=1)
     parser.add_argument('--experiment_id', type=str,
@@ -172,6 +176,6 @@ if __name__ == '__main__':
     run_app(args.img1, args.img2,
             args.descriptor, args.patch_size,
             args.matching_threshold,
-            args.ransac_sample_size, args.ransac_n_iterations, args.ransac_tolerance, args.ransac_inlier_fraction_threshold,
+            args.ransac_sample_size, args.ransac_n_iterations, args.ransac_tolerance, args.ransac_inlier_threshold,
             args.visualize==1,
             args.experiment_id, args.case_id)

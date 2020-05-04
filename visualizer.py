@@ -48,7 +48,7 @@ class Visualizer:
         ax2.set_title("Image 2")
         #fig.suptitle("Detected keypoints and best matches", fontsize='x-large')
         if self.save_results:
-            fig.savefig(self.results_dir + self.case_id + "_keypoints.png")
+            fig.savefig(self.results_dir + self.case_id.replace('.','') + "_keypoints.png")
         if self.visualize:
             plt.show()
 
@@ -90,7 +90,7 @@ class Visualizer:
         ax.set_title(title)
         ax.axis('off')
         if self.save_results:
-            fig.savefig(self.results_dir + self.case_id + "_matches.png")
+            fig.savefig(self.results_dir + self.case_id.replace('.','') + "_matches.png")
         if self.visualize:
             plt.show()
 
@@ -131,6 +131,6 @@ class Visualizer:
             ax.axis('off')
 
         if self.save_results:
-            fig.savefig(self.results_dir + self.case_id + "_stitching_result.png")
+            fig.savefig(self.results_dir + self.case_id.replace('.','') + "_stitching_result.png")
         if self.visualize:
             plt.show()
