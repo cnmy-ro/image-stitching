@@ -4,11 +4,11 @@ import cv2
 import skimage.feature
 
 def get_Harris_corners(img1_gray, img2_gray):
-    img1_harris = cv2.cornerHarris(img1_gray, 3, 3, 0.04)
+    img1_harris = cv2.cornerHarris(img1_gray, 2, 3, 0.04)
     img1_kpts = skimage.feature.corner_peaks(img1_harris, min_distance=1) # Format: (row,col)
     img1_kpts[:,[0,1]] = img1_kpts[:,[1,0]] # Transorm into (x,y)
 
-    img2_harris = cv2.cornerHarris(img2_gray, 3, 3, 0.04)
+    img2_harris = cv2.cornerHarris(img2_gray, 2, 3, 0.04)
     img2_kpts = skimage.feature.corner_peaks(img2_harris, min_distance=1)
     img2_kpts[:,[0,1]] = img2_kpts[:,[1,0]]
     return img1_kpts, img2_kpts

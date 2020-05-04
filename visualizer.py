@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import cv2
 
 class Visualizer:
-    def __init__(self, img1, img2, save_results=False, results_dir=None):
+    def __init__(self, img1, img2, visualize=True, save_results=False, results_dir=None, case_id=None):
+        self.visualize = visualize
+
         self.img1_rgb = img1
         self.img1_gray = cv2.cvtColor(self.img1_rgb, cv2.COLOR_RGB2GRAY)
         self.img2_rgb = img2
@@ -16,6 +18,7 @@ class Visualizer:
 
         self.save_results = save_results
         self.results_dir = results_dir
+        self.case_id = case_id
 
     def set_keypoints(self, img1_kpts, img2_kpts):
         self.img1_kpts = img1_kpts
@@ -45,8 +48,9 @@ class Visualizer:
         ax2.set_title("Image 2")
         #fig.suptitle("Detected keypoints and best matches", fontsize='x-large')
         if self.save_results:
-            fig.savefig(self.results_dir + "keypoints.png")
-        plt.show()
+            fig.savefig(self.results_dir + self.case_id + "_keypoints.png")
+        if self.visualize:
+            plt.show()
 
 
     def draw_matches(self, title):
@@ -62,10 +66,7 @@ class Visualizer:
             inlier_color = 'blue'
             outlier_color = 'red'
 
-            ax.plot( [ self.img1_kpts[self.inlier_indices[:,0], 0], self.img1_rgb.shape[1] + white_strip.shape[1] + self.img2_kpts[self.inlier_indices[:,1], 0]  ],
-                     [ self.img1_kpts[self.inlier_indices[:,0], 1], self.img2_kpts[self.inlier_indices[:,1], 1] ],
-                     color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
-
+            # Plot outliers
             outlier_indices = []
             for indices in self.matching_kpt_pair_indices:
                 if indices not in self.inlier_indices:
@@ -74,6 +75,11 @@ class Visualizer:
             ax.plot( [ self.img1_kpts[outlier_indices[:,0], 0], self.img1_rgb.shape[1] + white_strip.shape[1] + self.img2_kpts[outlier_indices[:,1], 0]  ],
                      [ self.img1_kpts[outlier_indices[:,0], 1], self.img2_kpts[outlier_indices[:,1], 1] ],
                      color=outlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+
+            # Plot inliers
+            ax.plot( [ self.img1_kpts[self.inlier_indices[:,0], 0], self.img1_rgb.shape[1] + white_strip.shape[1] + self.img2_kpts[self.inlier_indices[:,1], 0]  ],
+                     [ self.img1_kpts[self.inlier_indices[:,0], 1], self.img2_kpts[self.inlier_indices[:,1], 1] ],
+                     color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
 
         else:
             color = 'green'
@@ -84,8 +90,9 @@ class Visualizer:
         ax.set_title(title)
         ax.axis('off')
         if self.save_results:
-            fig.savefig(self.results_dir + "matches.png")
-        plt.show()
+            fig.savefig(self.results_dir + self.case_id + "_matches.png")
+        if self.visualize:
+            plt.show()
 
 
     def stitch_and_display(self, img2_warped, display_all=False):
@@ -124,5 +131,6 @@ class Visualizer:
             ax.axis('off')
 
         if self.save_results:
-            fig.savefig(self.results_dir + "stitching_result.png")
-        plt.show()
+            fig.savefig(self.results_dir + self.case_id + "_stitching_result.png")
+        if self.visualize:
+            plt.show()

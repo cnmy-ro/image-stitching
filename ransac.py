@@ -31,9 +31,6 @@ class RANSAC_Estimator:
 
 
     def estimate_affine_matrix(self, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-        # img1_kpts = np.array([kp.pt for kp in img1_kpts])
-        # img2_kpts = np.array([kp.pt for kp in img2_kpts])
-
         inlier_threshold = round(self.inlier_fraction_threshold * matching_kpt_pair_indices.shape[0])
 
         candidate_model_list = []
@@ -59,8 +56,8 @@ class RANSAC_Estimator:
                                                [u3,v3,1],
                                                   ...  ]
 
-              > X: model; Format: [[a,d,1],
-                                   [b,e,1],
+              > X: model; Format: [[a,d,0],
+                                   [b,e,0],
                                    [c,f,1]]
 
             '''
