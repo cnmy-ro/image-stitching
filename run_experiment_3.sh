@@ -52,7 +52,7 @@ inlier_threshold=15
 
 # Start execution -------------------------------------------------------------
 
-for sample_size in 3 4 5 6 7 8 9 10
+for sample_size in 3 4 5 6 7 8 9 10 11 12
 do
     python main.py --img1 $img1_path --img2 $img2_path --descriptor $descriptor --patch_size $patch_size \
                    --matching_threshold $matching_threshold \

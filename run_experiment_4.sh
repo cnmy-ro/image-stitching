@@ -23,7 +23,7 @@ inlier_threshold=15
 
 # Start execution -------------------------------------------------------------
 
-for tolerance in 20 30 40 50 60
+for tolerance in 2 5 10 20 30 40
 do
     python main.py --img1 $img1_path --img2 $img2_path --descriptor $descriptor --patch_size $patch_size \
                    --matching_threshold $matching_threshold \
@@ -52,7 +52,7 @@ inlier_threshold=15
 
 # Start execution -------------------------------------------------------------
 
-for tolerance in 20 30 40 50 60
+for tolerance in 2 5 10 20 30 40
 do
     python main.py --img1 $img1_path --img2 $img2_path --descriptor $descriptor --patch_size $patch_size \
                    --matching_threshold $matching_threshold \

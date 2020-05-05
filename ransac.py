@@ -3,16 +3,12 @@ import cv2
 
 
 def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
-    # img1_kpts = np.array([kp.pt for kp in img1_kpts])
     inlier_img1_kpts = img1_kpts[inlier_indices[:,0]]
     inlier_img1_kpts = np.hstack( (inlier_img1_kpts, np.ones((inlier_img1_kpts.shape[0],1))) )
-
-    # img2_kpts = np.array([kp.pt for kp in img2_kpts])
     inlier_img2_kpts = img2_kpts[inlier_indices[:,1]]
     inlier_img2_kpts  = np.hstack((inlier_img2_kpts, np.ones((inlier_img2_kpts.shape[0],1))) )
 
     inlier_img2_kpts_warped = np.dot(inlier_img2_kpts , affine_matrix.T)
-
     euc_distance = np.mean(np.sqrt(np.sum(np.square(inlier_img1_kpts-inlier_img2_kpts_warped), axis=1)), axis=0)
     return euc_distance
 
@@ -31,8 +27,6 @@ class RANSAC_Estimator:
 
 
     def estimate_affine_matrix(self, img1_kpts, img2_kpts, matching_kpt_pair_indices):
-        #inlier_threshold = round(self.inlier_fraction_threshold * matching_kpt_pair_indices.shape[0])
-
         candidate_model_list = []
         used_samples = []
         for i in range(self.n_iterations):
@@ -76,7 +70,7 @@ class RANSAC_Estimator:
                     pt1_true = np.append(img1_kpts[pair_indices[0]], [1])
                     pt1_hypothesis = np.dot(np.append(pt2, [1]), model)
 
-                    # Calculate error(euc distance b/w prediction and truth). In image coordinates.
+                    # Calculate error(euc distance b/w prediction and truth, in image coordinates)
                     dist_from_model = np.linalg.norm(pt1_true-pt1_hypothesis,ord=2)
 
                     if dist_from_model <= self.tolerance:
@@ -104,9 +98,9 @@ class RANSAC_Estimator:
 
         # Choose the best model (one with least residual sum value)
         if len(candidate_model_list) == 0:
-            raise Exception("Couldn't find a good model for the given constraints")
+            raise Exception("Couldn't find a good model for the given configuration")
 
         candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
-        affine_matrix, avg_residual, inlier_indices = candidate_model_list[0]
+        affine_matrix, avg_residual, inlier_indices, _ = candidate_model_list[0]
         return affine_matrix.T, avg_residual, inlier_indices
 

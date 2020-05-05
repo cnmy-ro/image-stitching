@@ -17,13 +17,13 @@ matching_threshold=0.980
 
 sample_size=3
 n_iterations=1000
-tolerance=20
+tolerance=5
 #inlier_threshold=15
 
 
 # Start execution -------------------------------------------------------------
 
-for inlier_threshold in 15 25 35 45 55
+for inlier_threshold in 15 25 35 45 55 65 75
 do
     python main.py --img1 $img1_path --img2 $img2_path --descriptor $descriptor --patch_size $patch_size \
                    --matching_threshold $matching_threshold \
@@ -46,13 +46,14 @@ matching_threshold=0.950
 
 sample_size=3
 n_iterations=1000
-tolerance=20
+tolerance=5
 #inlier_threshold=15
 
 
 # Start execution -------------------------------------------------------------
 
-for inlier_threshold in 15 25 35 45 55
+for inlier_threshold in 15 25 35 45 55 65 75
+
 do
     python main.py --img1 $img1_path --img2 $img2_path --descriptor $descriptor --patch_size $patch_size \
                    --matching_threshold $matching_threshold \

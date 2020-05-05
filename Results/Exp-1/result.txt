@@ -8,10 +8,10 @@ RANSAC tolerance: 40
 RANSAC inlier fraction threshold: 15.0
 
 Result --
-Average inlier residual (before refitting): 139.531
-No. of inliers: 132
+Average inlier residual (before refitting): 120.444
+No. of inliers: 96
 No. of outliers: None
-Average euclidean distance: 6.430
+Average euclidean distance: 5.720
 
 ----------------------------------------------
 
@@ -25,10 +25,10 @@ RANSAC tolerance: 40
 RANSAC inlier fraction threshold: 15.0
 
 Result --
-Average inlier residual (before refitting): 127.397
-No. of inliers: 141
+Average inlier residual (before refitting): 122.784
+No. of inliers: 106
 No. of outliers: None
-Average euclidean distance: 5.853
+Average euclidean distance: 5.462
 
 ----------------------------------------------
 
@@ -42,10 +42,10 @@ RANSAC tolerance: 40
 RANSAC inlier fraction threshold: 15.0
 
 Result --
-Average inlier residual (before refitting): 134.571
-No. of inliers: 156
+Average inlier residual (before refitting): 106.444
+No. of inliers: 116
 No. of outliers: None
-Average euclidean distance: 5.783
+Average euclidean distance: 4.806
 
 ----------------------------------------------
 
@@ -59,10 +59,10 @@ RANSAC tolerance: 40
 RANSAC inlier fraction threshold: 15.0
 
 Result --
-Average inlier residual (before refitting): 97.214
-No. of inliers: 164
+Average inlier residual (before refitting): 97.947
+No. of inliers: 122
 No. of outliers: None
-Average euclidean distance: 4.243
+Average euclidean distance: 4.519
 
 ----------------------------------------------
 
@@ -76,10 +76,95 @@ RANSAC tolerance: 40
 RANSAC inlier fraction threshold: 15.0
 
 Result --
-Average inlier residual (before refitting): 86.001
-No. of inliers: 164
+Average inlier residual (before refitting): 105.712
+No. of inliers: 134
 No. of outliers: None
-Average euclidean distance: 4.206
+Average euclidean distance: 4.972
+
+----------------------------------------------
+
+patch21
+Config --
+Descriptor: custom_rgb_intensities
+Patch size: 21
+Matching threshold: 0.98RANSAC sample size: 3
+RANSAC iterations: 1000
+RANSAC tolerance: 40
+RANSAC inlier fraction threshold: 15.0
+
+Result --
+Average inlier residual (before refitting): 93.856
+No. of inliers: 138
+No. of outliers: None
+Average euclidean distance: 4.205
+
+----------------------------------------------
+
+patch23
+Config --
+Descriptor: custom_rgb_intensities
+Patch size: 23
+Matching threshold: 0.98RANSAC sample size: 3
+RANSAC iterations: 1000
+RANSAC tolerance: 40
+RANSAC inlier fraction threshold: 15.0
+
+Result --
+Average inlier residual (before refitting): 49.903
+No. of inliers: 142
+No. of outliers: None
+Average euclidean distance: 3.208
+
+----------------------------------------------
+
+patch25
+Config --
+Descriptor: custom_rgb_intensities
+Patch size: 25
+Matching threshold: 0.98RANSAC sample size: 3
+RANSAC iterations: 1000
+RANSAC tolerance: 40
+RANSAC inlier fraction threshold: 15.0
+
+Result --
+Average inlier residual (before refitting): 42.799
+No. of inliers: 143
+No. of outliers: None
+Average euclidean distance: 2.924
+
+----------------------------------------------
+
+patch27
+Config --
+Descriptor: custom_rgb_intensities
+Patch size: 27
+Matching threshold: 0.98RANSAC sample size: 3
+RANSAC iterations: 1000
+RANSAC tolerance: 40
+RANSAC inlier fraction threshold: 15.0
+
+Result --
+Average inlier residual (before refitting): 31.668
+No. of inliers: 132
+No. of outliers: None
+Average euclidean distance: 2.017
+
+----------------------------------------------
+
+patch29
+Config --
+Descriptor: custom_rgb_intensities
+Patch size: 29
+Matching threshold: 0.98RANSAC sample size: 3
+RANSAC iterations: 1000
+RANSAC tolerance: 40
+RANSAC inlier fraction threshold: 15.0
+
+Result --
+Average inlier residual (before refitting): 22.333
+No. of inliers: 128
+No. of outliers: None
+Average euclidean distance: 1.640
 
 ----------------------------------------------
 

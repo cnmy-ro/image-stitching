@@ -43,13 +43,13 @@ def run_app(img1_path, img2_path,
     # Create the visualizer object
     vis = visualizer.Visualizer(img1_rgb, img2_rgb, visualize, save_results, results_dir, case_id)
 
-    # Create sift object (used only if enabled)
-    sift = cv2.xfeatures2d.SIFT_create(nfeatures=100)
+    # Create sift object (sift descriptor used only if enabled)
+    sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
 
     # -------------------------------------------------------------------------
-    # Corner detection
+    # Harris Corner detection
 
-    img1_kpts, img2_kpts = utils.get_Harris_corners(img1_gray, img2_gray)
+    img1_kpts, img2_kpts = utils.get_Harris_corners_2(img1_gray, img2_gray)
 
     vis.set_keypoints(img1_kpts, img2_kpts)
     vis.draw_keypoints()
@@ -83,8 +83,8 @@ def run_app(img1_path, img2_path,
 
     # Matching keypoint pair indices.
     matching_kpt_pair_indices = utils.get_matchings_2(correlation_matrix,
-                                                    similarity_type='correlation',
-                                                    threshold=matching_threshold)
+                                                      similarity_type='correlation',
+                                                      threshold=matching_threshold)
 
     # Visualize matchings
     vis.set_matches(matching_kpt_pair_indices)
@@ -128,7 +128,7 @@ def run_app(img1_path, img2_path,
     # -------------------------------------------------------------------------
     # Apply Affine transform
 
-    img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img2_gray.shape[0]))
+    img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img1_gray.shape[0]))
     vis.draw_matches(title="Inliers (blue) and Outliers (red)")
     vis.stitch_and_display(img2_warped, display_all=False)
 
@@ -142,10 +142,10 @@ def parse_args():
                         default="./Images/Pair-7/2.jpeg")
     parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
                         default='custom_rgb_intensities')
-    parser.add_argument('--patch_size', type=int, help="5,7,9,...",
-                        default=15)
+    parser.add_argument('--patch_size', type=int, help="9,11,13,15,...",
+                        default=9)
     parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
-                        default=0.985)
+                        default=0.980)
     parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
                         default=3)
     parser.add_argument('--ransac_n_iterations', type=int,
@@ -153,7 +153,7 @@ def parse_args():
     parser.add_argument('--ransac_tolerance', type=int, help="Tolerance value for a kpt pair to be considered an inlier",
                         default=40)
     parser.add_argument('--ransac_inlier_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
-                        default=0.03)
+                        default=15)
     parser.add_argument('--visualize', type=int,
                         default=1)
     parser.add_argument('--experiment_id', type=str,

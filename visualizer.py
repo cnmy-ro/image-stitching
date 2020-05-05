@@ -58,8 +58,19 @@ class Visualizer:
         fig.set_size_inches(0.5*18.5, 0.4*10.5)
         fig.set_dpi(200)
         #fig.subplots_adjust(wspace=0.2, hspace=0.1, top=0.95, bottom=0.05, left=0.05, right=0.95)
-        white_strip = (np.ones((self.img1_rgb.shape[0], 100, 3))*255).astype(np.uint8)
-        combined_img = np.hstack((self.img1_rgb, white_strip, self.img2_rgb))
+
+        if self.img1_rgb.shape[0] > self.img2_rgb.shape[0]:
+            white_strip = (np.ones((self.img2_rgb.shape[0], 100, 3))*255).astype(np.uint8)
+            combined_img = np.hstack((self.img1_rgb[:self.img2_rgb.shape[0]], white_strip, self.img2_rgb))
+
+        elif self.img1_rgb.shape[0] < self.img2_rgb.shape[0]:
+            white_strip = (np.ones((self.img1_rgb.shape[0], 100, 3))*255).astype(np.uint8)
+            combined_img = np.hstack((self.img1_rgb, white_strip, self.img2_rgb[:self.img1_rgb.shape[0]]))
+
+        else:
+            white_strip = (np.ones((self.img1_rgb.shape[0], 100, 3))*255).astype(np.uint8)
+            combined_img = np.hstack((self.img1_rgb, white_strip, self.img2_rgb))
+
         ax.imshow(combined_img)
 
         if self.inlier_indices is not None:
