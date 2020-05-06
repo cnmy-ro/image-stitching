@@ -1,11 +1,3 @@
-Results/Exp-1/*
-Results/Exp-2a/thresh*
-Results/Exp-2b/thresh*
-Results/Exp-3a/ss*
-Results/Exp-3b/ss*
-Results/Exp-4a/tol*
-Results/Exp-4b/tol*
-Results/Exp-5a/inthr*
-Results/Exp-5b/inthr*
+Results/*
 
 __pycache__/*
