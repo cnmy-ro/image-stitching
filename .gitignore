@@ -1,3 +1,11 @@
-Results/*
+Results/Exp-1/patch*.png
+Results/Exp-2a/thresh*.png
+Results/Exp-2b/thresh*.png
+Results/Exp-3a/ss*.png
+Results/Exp-3b/ss*.png
+Results/Exp-4a/tol*.png
+Results/Exp-4b/tol*.png
+Results/Exp-5a/inthr*.png
+Results/Exp-5b/inthr*.png
 
 __pycache__/*
