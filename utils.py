@@ -17,14 +17,14 @@ def get_Harris_corners(img1_gray, img2_gray):
 def get_Harris_corners_2(img1_gray, img2_gray):
     img1_harris = cv2.cornerHarris(img1_gray, 2, 3, 0.04)
     img1_harris = cv2.dilate(img1_harris,None)
-    ret, img1_harris = cv2.threshold(img1_harris, 0.05*img1_harris.max(), 255, 0)
+    ret, img1_harris = cv2.threshold(img1_harris, 0.01*img1_harris.max(), 255, 0)
     img1_harris = np.uint8(img1_harris)
     _, _, _, centroids = cv2.connectedComponentsWithStats(img1_harris)
     img1_kpts = centroids.copy().astype(np.uint16)
 
     img2_harris = cv2.cornerHarris(img2_gray, 2, 3, 0.04)
     img2_harris = cv2.dilate(img2_harris,None)
-    ret, img2_harris = cv2.threshold(img2_harris, 0.05*img2_harris.max(), 255, 0)
+    ret, img2_harris = cv2.threshold(img2_harris, 0.01*img2_harris.max(), 255, 0)
     img2_harris = np.uint8(img2_harris)
     _, _, _, centroids = cv2.connectedComponentsWithStats(img2_harris)
     img2_kpts = centroids.copy().astype(np.uint16)

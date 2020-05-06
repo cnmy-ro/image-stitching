@@ -70,6 +70,8 @@ def run_app(img1_path, img2_path,
     img1_descriptors = utils.normalize(img1_descriptors)
     img2_descriptors = utils.normalize(img2_descriptors)
 
+    # img2_descriptors = img2_descriptors[1:,:]
+
     # -------------------------------------------------------------------------
     # Get similarity matrices
     #   - High similarity = Low euc distance, High correlation
@@ -128,7 +130,7 @@ def run_app(img1_path, img2_path,
 
     img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img1_gray.shape[0]))
     vis.draw_matches(title="Inliers (blue) and Outliers (red)")
-    vis.stitch_and_display(img2_warped, display_all=True)
+    vis.stitch_and_display(img2_warped, display_all=False)
 
 
 ###############################################################################
@@ -139,23 +141,23 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--img1', type=str, help="Path to image 1",
-                        default="./Images/Pair-7/1.jpeg")
+                        default="./Images/Hard_pair-1/1.jpeg")
     parser.add_argument('--img2', type=str, help="Path to image 2",
-                        default="./Images/Pair-7/2.jpeg")
+                        default="./Images/Hard_pair-1/2.jpeg")
     parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
-                        default='opencv_sift')
+                        default='custom_rgb_intensities')
     parser.add_argument('--patch_size', type=int, help="9,11,13,15,...",
-                        default=11)
+                        default=21)
     parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
-                        default=0.950)
+                        default=0.940)
     parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
                         default=3)
     parser.add_argument('--ransac_n_iterations', type=int,
                         default=1000)
     parser.add_argument('--ransac_tolerance', type=int, help="Tolerance value for a kpt pair to be considered an inlier",
-                        default=40)
+                        default=50)
     parser.add_argument('--ransac_inlier_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
-                        default=15)
+                        default=5)
     parser.add_argument('--visualize', type=int,
                         default=1)
     parser.add_argument('--experiment_id', type=str,

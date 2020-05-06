@@ -1,0 +1,30 @@
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--img1', type=str, help="Path to image 1",
+                        default="./Images/hard-case/1.jpeg")
+    parser.add_argument('--img2', type=str, help="Path to image 2",
+                        default="./Images/hard-case/2.jpeg")
+    parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
+                        default='custom_rgb_intensities')
+    parser.add_argument('--patch_size', type=int, help="9,11,13,15,...",
+                        default=21)
+    parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
+                        default=0.940)
+    parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
+                        default=3)
+    parser.add_argument('--ransac_n_iterations', type=int,
+                        default=1000)
+    parser.add_argument('--ransac_tolerance', type=int, help="Tolerance value for a kpt pair to be considered an inlier",
+                        default=50)
+    parser.add_argument('--ransac_inlier_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
+                        default=5)
+    parser.add_argument('--visualize', type=int,
+                        default=1)
+    parser.add_argument('--experiment_id', type=str,
+                        default=None)
+    parser.add_argument('--case_id', type=str,
+                        default=None)
+
+    args = parser.parse_args()
+    return args
