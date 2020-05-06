@@ -1,6 +1,8 @@
 import numpy as np
-import cv2
 
+'''
+RANSAC utility funcion to compute average inlier Euclidean distance for the final model
+'''
 
 def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
     inlier_img1_kpts = img1_kpts[inlier_indices[:,0]]
@@ -16,6 +18,9 @@ def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
 ###############################################################################
 # RANSAC implementation
 ###############################################################################
+'''
+RANSAC_Estimato class
+'''
 
 class RANSAC_Estimator:
 
@@ -101,6 +106,6 @@ class RANSAC_Estimator:
             raise Exception("Couldn't find a good model for the given configuration")
 
         candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
-        affine_matrix, avg_residual, inlier_indices, _ = candidate_model_list[0]
+        affine_matrix, avg_residual, inlier_indices, = candidate_model_list[0]
         return affine_matrix.T, avg_residual, inlier_indices
 

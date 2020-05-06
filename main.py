@@ -7,6 +7,8 @@ import utils, descriptors, ransac, visualizer
 np.random.seed(0)
 
 ###############################################################################
+# Main function for the panorama application
+###############################################################################
 
 def run_app(img1_path, img2_path,
             descriptor, patch_size,
@@ -16,8 +18,7 @@ def run_app(img1_path, img2_path,
             experiment_id=None,
             case_id=None):
 
-
-    # Prepare the results directory
+    # Prepare the results directory for the experiment
     save_results = False
     results_dir = None
     if experiment_id:
@@ -25,10 +26,6 @@ def run_app(img1_path, img2_path,
         results_dir = "./Results/Exp-" + experiment_id + "/"
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
-        with open(results_dir+"result.txt", 'a') as result_file:
-            result_file.write(case_id+'\n')
-            config = "Config --\nDescriptor: {}\nPatch size: {}\nMatching threshold: {}RANSAC sample size: {}\nRANSAC iterations: {}\nRANSAC tolerance: {}\nRANSAC inlier fraction threshold: {}".format(descriptor, patch_size, matching_threshold, ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_threshold)
-            result_file.write(config)
         print("Experiment: {} | Case: {}".format(experiment_id, case_id))
 
     # Read and prepare the images
@@ -76,7 +73,7 @@ def run_app(img1_path, img2_path,
     # -------------------------------------------------------------------------
     # Get similarity matrices
     #   - High similarity = Low euc distance, High correlation
-    #   - Shape: [n_img1_kpts, n_img2_kpts]
+    #   - Common shape: [n_img1_kpts, n_img2_kpts]
 
     euc_distance_matrix = utils.compute_euclidean_distances(img1_descriptors, img2_descriptors)
     correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptors)
@@ -92,7 +89,6 @@ def run_app(img1_path, img2_path,
 
     # -------------------------------------------------------------------------
     # Perform RANSAC to obtain the affine matrix
-
     ransac_estimator = ransac.RANSAC_Estimator(ransac_sample_size,
                                                ransac_n_iterations,
                                                ransac_tolerance,
@@ -104,23 +100,25 @@ def run_app(img1_path, img2_path,
     metrics = {'n-inliers': None,
                'n-outliers': None,
                'avg-inlier-residual': None,
-               'avg-inlier-euc-dist': None}
+               'avg-inlier-euc-dist': None
+              }
 
-    metrics['avg-inlier-residual'] = avg_residual
     metrics['n-inliers'] = inlier_indices.shape[0]
-    metrics['n-onliers'] = matching_kpt_pair_indices.shape[0]-inlier_indices.shape[0]
+    metrics['n-outliers'] = matching_kpt_pair_indices.shape[0]-inlier_indices.shape[0]
+    metrics['avg-inlier-residual'] = avg_residual
     metrics['avg-inlier-euc-dist'] = ransac.evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices)
 
     if experiment_id:
         with open(results_dir+"result.txt", 'a') as result_file:
-            result = "\n\nResult --\nAverage inlier residual (before refitting): {:.3f}\nNo. of inliers: {}\nNo. of outliers: {}\nAverage euclidean distance: {:.3f}".format( metrics['avg-inlier-residual'], metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-euc-dist'])
+            # result = "\n\nResult --\nAverage inlier residual (before refitting): {:.3f}\nNo. of inliers: {}\nNo. of outliers: {}\nAverage euclidean distance: {:.3f}".format( metrics['avg-inlier-residual'], metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-euc-dist'])
+            result = "{:d},{:d},{:.2f},{:.2f}\n".format(metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-residual'], metrics['avg-inlier-euc-dist'])
             result_file.write(result)
-            result_file.write("\n\n----------------------------------------------\n\n")
+            # result_file.write("\n\n----------------------------------------------\n\n")
 
-    print("Avg residual for the inliers (before refitting): {:.3f}".format(metrics['avg-inlier-residual']))
     print("No. of inliers: {:.3f}".format(metrics['n-inliers']))
-    print("No. of outliers: {:.3f}".format(metrics['n-onliers']))
-    print("Average Euclidean distance: {:.3f}".format(metrics['avg-inlier-euc-dist']) )
+    print("No. of outliers: {:.3f}".format(metrics['n-outliers']))
+    print("Avg. inlier residual (before refitting): {:.3f}".format(metrics['avg-inlier-residual']))
+    print("Avg. inlier Euclidean distance (after refitting): {:.3f}".format(metrics['avg-inlier-euc-dist']) )
     print("\n")
 
     vis.set_inliers(inlier_indices)
@@ -130,8 +128,12 @@ def run_app(img1_path, img2_path,
 
     img2_warped = cv2.warpPerspective(img2_rgb, affine_matrix, (img1_gray.shape[1]+img2_gray.shape[1],img1_gray.shape[0]))
     vis.draw_matches(title="Inliers (blue) and Outliers (red)")
-    vis.stitch_and_display(img2_warped, display_all=False)
+    vis.stitch_and_display(img2_warped, display_all=True)
 
+
+###############################################################################
+# Argument parser function
+###############################################################################
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -141,11 +143,11 @@ def parse_args():
     parser.add_argument('--img2', type=str, help="Path to image 2",
                         default="./Images/Pair-7/2.jpeg")
     parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
-                        default='custom_rgb_intensities')
+                        default='opencv_sift')
     parser.add_argument('--patch_size', type=int, help="9,11,13,15,...",
-                        default=9)
+                        default=11)
     parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
-                        default=0.980)
+                        default=0.950)
     parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
                         default=3)
     parser.add_argument('--ransac_n_iterations', type=int,
@@ -166,7 +168,7 @@ def parse_args():
 
 
 ###############################################################################
-#  Run the panorama application
+# Run the panorama application
 ###############################################################################
 
 if __name__ == '__main__':

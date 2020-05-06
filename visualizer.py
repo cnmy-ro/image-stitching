@@ -2,6 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
+'''
+Visualizer class:
+    - Handles all the image plotting work
+    - Contains methods for displaying keypoints, matches, inlier and outliers, and
+      the final stitching result
+'''
+
 class Visualizer:
     def __init__(self, img1, img2, visualize=True, save_results=False, results_dir=None, case_id=None):
         self.visualize = visualize
@@ -127,11 +134,11 @@ class Visualizer:
             ax3.imshow(stitched_image)
 
             ax1.axis('off')
-            ax1.set_title("Image 1")
+            ax1.set_title("Image 1", fontsize='small')
             ax2.axis('off')
-            ax2.set_title("Image 2 warped")
+            ax2.set_title("Image 2 warped", fontsize='small')
             ax3.axis('off')
-            ax3.set_title("Stitched image")
+            ax3.set_title("Stitched image", fontsize='small')
 
         else:
             fig, ax = plt.subplots()

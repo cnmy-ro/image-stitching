@@ -66,15 +66,22 @@ def get_matchings(similarity_matrix, similarity_type, threshold):
 
 def get_matchings_2(similarity_matrix, similarity_type, threshold):
     # 2-way NN matching without replacement
+    similarity_matrix_copy = similarity_matrix.copy()
+    matching_kpt_pair_indices = []
+
+    if similarity_type == 'euc_distance':
+        for i in range(similarity_matrix.shape[0]):
+            match_for_i = np.argmin(similarity_matrix_copy[i,:]) # Find best match for i
+            # Check if the vice versa is also true, and apply threshold
+            if i == np.argmin(similarity_matrix_copy[:,match_for_i]) and similarity_matrix[i,match_for_i] <= threshold :
+                matching_kpt_pair_indices.append(tuple([i,match_for_i]))
+
     if similarity_type == 'correlation':
-        similarity_matrix_copy = similarity_matrix.copy()
-        matching_kpt_pair_indices = np.array([[-1,-1]])
         for i in range(similarity_matrix.shape[0]):
             match_for_i = np.argmax(similarity_matrix_copy[i,:]) # Find best match for i
             # Check if the vice versa is also true, and apply threshold
             if i == np.argmax(similarity_matrix_copy[:,match_for_i]) and similarity_matrix[i,match_for_i] >= threshold :
-                matching_kpt_pair_indices = np.append(matching_kpt_pair_indices, np.array([[i,match_for_i]]), axis=0)
-                similarity_matrix_copy[:, match_for_i] = -99
-        np.delete(matching_kpt_pair_indices, 0, axis=0)
-        return matching_kpt_pair_indices
+                matching_kpt_pair_indices.append(tuple([i,match_for_i]))
+
+    return np.array(matching_kpt_pair_indices)
 
