@@ -1,10 +1,10 @@
 import numpy as np
 
-'''
-RANSAC utility funcion to compute average inlier Euclidean distance for the final model
-'''
 
 def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
+    '''
+    RANSAC utility funcion to compute average inlier Euclidean distance for the final model
+    '''
     inlier_img1_kpts = img1_kpts[inlier_indices[:,0]]
     inlier_img1_kpts = np.hstack( (inlier_img1_kpts, np.ones((inlier_img1_kpts.shape[0],1))) )
     inlier_img2_kpts = img2_kpts[inlier_indices[:,1]]
@@ -18,12 +18,13 @@ def evaluate_model(affine_matrix, img1_kpts, img2_kpts, inlier_indices):
 ###############################################################################
 # RANSAC implementation
 ###############################################################################
-'''
-RANSAC_Estimato class
-'''
 
 class RANSAC_Estimator:
+    '''
+    RANSAC_Estimator class
 
+    PARAMETERS: sample_size, n_iterations, tolerance, inlier_threshold
+    '''
     def __init__(self, sample_size, n_iterations, tolerance, inlier_threshold):
         self.sample_size = sample_size
         self.n_iterations = n_iterations
@@ -32,6 +33,15 @@ class RANSAC_Estimator:
 
 
     def estimate_affine_matrix(self, img1_kpts, img2_kpts, matching_kpt_pair_indices):
+        '''
+        Estimates the linear model representing an affine transformation
+
+        PARAMETERS: Keypoints from both images and the correspondences
+
+        RETURNS:    affine_matrix - Best linear model
+                    avg_residual - Average of residual of this model for all inliers before refitting
+                    inlier_indices - np array of indices of matching keypoints that are inliers for this model
+        '''
         candidate_model_list = []
         used_samples = []
         for i in range(self.n_iterations):

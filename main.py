@@ -1,4 +1,4 @@
-import os, sys, argparse
+import os, argparse
 import numpy as np
 import cv2
 
@@ -11,6 +11,7 @@ np.random.seed(0)
 ###############################################################################
 
 def run_app(img1_path, img2_path,
+            harris_thr,
             descriptor, patch_size,
             matching_threshold,
             ransac_sample_size, ransac_n_iterations, ransac_tolerance, ransac_inlier_threshold,
@@ -44,9 +45,9 @@ def run_app(img1_path, img2_path,
     sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
 
     # -------------------------------------------------------------------------
-    # Harris Corner detection
+    # Perform Harris Corner detection
 
-    img1_kpts, img2_kpts = utils.get_Harris_corners_2(img1_gray, img2_gray)
+    img1_kpts, img2_kpts = utils.get_Harris_corners(img1_gray, img2_gray, harris_thr)
 
     vis.set_keypoints(img1_kpts, img2_kpts)
     vis.draw_keypoints()
@@ -70,8 +71,6 @@ def run_app(img1_path, img2_path,
     img1_descriptors = utils.normalize(img1_descriptors)
     img2_descriptors = utils.normalize(img2_descriptors)
 
-    # img2_descriptors = img2_descriptors[1:,:]
-
     # -------------------------------------------------------------------------
     # Get similarity matrices
     #   - High similarity = Low euc distance, High correlation
@@ -81,9 +80,9 @@ def run_app(img1_path, img2_path,
     correlation_matrix = utils.compute_correlation(img1_descriptors, img2_descriptors)
 
     # Matching keypoint pair indices.
-    matching_kpt_pair_indices = utils.get_matchings_2(correlation_matrix,
-                                                      similarity_type='correlation',
-                                                      threshold=matching_threshold)
+    matching_kpt_pair_indices = utils.get_matchings(correlation_matrix,
+                                                    similarity_type='correlation',
+                                                    threshold=matching_threshold)
 
     # Visualize matchings
     vis.set_matches(matching_kpt_pair_indices)
@@ -112,10 +111,8 @@ def run_app(img1_path, img2_path,
 
     if experiment_id:
         with open(results_dir+"result.txt", 'a') as result_file:
-            # result = "\n\nResult --\nAverage inlier residual (before refitting): {:.3f}\nNo. of inliers: {}\nNo. of outliers: {}\nAverage euclidean distance: {:.3f}".format( metrics['avg-inlier-residual'], metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-euc-dist'])
             result = "{:d},{:d},{:.2f},{:.2f}\n".format(metrics['n-inliers'], metrics['n-outliers'], metrics['avg-inlier-residual'], metrics['avg-inlier-euc-dist'])
             result_file.write(result)
-            # result_file.write("\n\n----------------------------------------------\n\n")
 
     print("No. of inliers: {:.3f}".format(metrics['n-inliers']))
     print("No. of outliers: {:.3f}".format(metrics['n-outliers']))
@@ -141,23 +138,25 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--img1', type=str, help="Path to image 1",
-                        default="./Images/Hard_pair-1/1.jpeg")
+                        default="./test_images/Original/1.jpeg")
     parser.add_argument('--img2', type=str, help="Path to image 2",
-                        default="./Images/Hard_pair-1/2.jpeg")
+                        default="./test_images/Original/2.jpeg")
+    parser.add_argument('--harris_thr', type=float, help="0.01 - 0.1",
+                        default=0.05)
     parser.add_argument('--descriptor', type=str, help="Options: 'custom_gray_intensities', custom_rgb_intensities, 'opencv_sift'",
                         default='custom_rgb_intensities')
     parser.add_argument('--patch_size', type=int, help="9,11,13,15,...",
-                        default=21)
+                        default=11)
     parser.add_argument('--matching_threshold', type=float, help="Minimum correlation value for a kpt descriptor pair to match",
-                        default=0.940)
+                        default=0.980)
     parser.add_argument('--ransac_sample_size', type=int, help="3,4,5,...",
                         default=3)
     parser.add_argument('--ransac_n_iterations', type=int,
                         default=1000)
     parser.add_argument('--ransac_tolerance', type=int, help="Tolerance value for a kpt pair to be considered an inlier",
-                        default=50)
+                        default=40)
     parser.add_argument('--ransac_inlier_threshold', type=float, help="Fraction of the total matching pairs that need to be inliers",
-                        default=5)
+                        default=15)
     parser.add_argument('--visualize', type=int,
                         default=1)
     parser.add_argument('--experiment_id', type=str,
@@ -178,6 +177,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     run_app(args.img1, args.img2,
+            args.harris_thr,
             args.descriptor, args.patch_size,
             args.matching_threshold,
             args.ransac_sample_size, args.ransac_n_iterations, args.ransac_tolerance, args.ransac_inlier_threshold,
